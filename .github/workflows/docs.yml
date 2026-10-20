@@ -39,6 +39,7 @@ jobs:
           cp docs/undertone-landing.html .artifacts/docs/html/index.html
           cp docs/robots.txt .artifacts/docs/html/robots.txt
           cp install.sh .artifacts/docs/html/install.sh
+          cp docs/images/shots/styles/shuffles/shuffles.json .artifacts/docs/html/images/shots/styles/shuffles/
 
       - name: Setup Pages
         uses: actions/configure-pages@v6.0.0

@@ -59,6 +59,8 @@ out=".artifacts/docs/html"
 cp "$landing" "$out/index.html"
 cp docs/robots.txt "$out/robots.txt"
 cp install.sh "$out/install.sh"
+# docs-builder copies images, not the index of the landing page's shuffles.
+cp docs/images/shots/styles/shuffles/shuffles.json "$out/images/shots/styles/shuffles/"
 echo "docs: built $out (landing page applied)"
 
 [[ "${1:-}" == "--noserve" ]] && exit 0

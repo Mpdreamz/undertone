@@ -120,6 +120,11 @@
   .tile figcaption { margin-top: 10px; font-size: 15px; }
   .tile figcaption b { font-weight: 600; }
   .tile figcaption span { color: var(--dim); display: block; font-size: 14px; }
+  .tile figcaption i { font-style: normal; color: var(--muted); transition: opacity .5s; }
+  .cycle { position: relative; }
+  .cycle img + img { position: absolute; inset: 0; opacity: 0; transition: opacity .9s ease; }
+  .cycle img.shown { opacity: 1; }
+  .styles .tile img { aspect-ratio: 960 / 624; }
 
   .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .pair figure { margin: 0; }
@@ -226,24 +231,25 @@
     <div class="eyebrow">Eleven styles</div>
     <h2>Gradients, and a lot of shapes.</h2>
     <p class="sub">Glows, marbling, layered waves, lit spheres, rings, dunes, topographic lines, silk, aurora, a bauhaus
-      grid and a lava lamp. Lock one, or let every shuffle pick.</p>
+      grid and a lava lamp. Every picture is generated: each tile below is shuffling, its style locked, its tonality
+      and layout new every time. Lock a style, or let every shuffle pick.</p>
     <div class="toggle" role="group" aria-label="Appearance">
       <button class="on" data-appearance="dark">Dark</button><button data-appearance="light">Light</button>
     </div>
   </div>
   <div class="wrap">
     <div class="grid styles">
-      <figure class="tile"><img src="images/shots/styles/mesh-dark.jpg" alt="Mesh in ember" loading="lazy"><figcaption><b>Mesh</b><span>Soft glows over a dark base</span></figcaption></figure>
-      <figure class="tile"><img src="images/shots/styles/flow-dark.jpg" alt="Flow in dusk" loading="lazy"><figcaption><b>Flow</b><span>Marbled, slowly folding colour</span></figcaption></figure>
-      <figure class="tile"><img src="images/shots/styles/waves-dark.jpg" alt="Waves in tide" loading="lazy"><figcaption><b>Waves</b><span>Layered ribbons with a lit rim</span></figcaption></figure>
-      <figure class="tile"><img src="images/shots/styles/orbs-dark.jpg" alt="Orbs in aurora" loading="lazy"><figcaption><b>Orbs</b><span>Lit spheres</span></figcaption></figure>
-      <figure class="tile"><img src="images/shots/styles/rings-dark.jpg" alt="Rings in citrus" loading="lazy"><figcaption><b>Rings</b><span>Bands round an off-screen centre</span></figcaption></figure>
-      <figure class="tile"><img src="images/shots/styles/dunes-dark.jpg" alt="Dunes in dusk" loading="lazy"><figcaption><b>Dunes</b><span>Stacked hills fading into haze</span></figcaption></figure>
-      <figure class="tile"><img src="images/shots/styles/contour-dark.jpg" alt="Contour in glacier" loading="lazy"><figcaption><b>Contour</b><span>Topographic lines</span></figcaption></figure>
-      <figure class="tile"><img src="images/shots/styles/silk-dark.jpg" alt="Silk in ember" loading="lazy"><figcaption><b>Silk</b><span>Twisting ribbons with a sheen</span></figcaption></figure>
-      <figure class="tile"><img src="images/shots/styles/aurora-dark.jpg" alt="Aurora in aurora" loading="lazy"><figcaption><b>Aurora</b><span>Curtains of light</span></figcaption></figure>
-      <figure class="tile"><img src="images/shots/styles/bauhaus-dark.jpg" alt="Bauhaus in moss" loading="lazy"><figcaption><b>Bauhaus</b><span>A grid of quarter and half circles</span></figcaption></figure>
-      <figure class="tile"><img src="images/shots/styles/blobs-dark.jpg" alt="Blobs in dusk" loading="lazy"><figcaption><b>Blobs</b><span>A lava lamp</span></figcaption></figure>
+      <figure class="tile" data-style="mesh" data-tonality="ember"><div class="cycle"><img src="images/shots/styles/mesh-dark.jpg" alt="Mesh in ember" loading="lazy"></div><figcaption><b>Mesh</b> <i>in Ember</i><span>Soft glows over a dark base</span></figcaption></figure>
+      <figure class="tile" data-style="flow" data-tonality="dusk"><div class="cycle"><img src="images/shots/styles/flow-dark.jpg" alt="Flow in dusk" loading="lazy"></div><figcaption><b>Flow</b> <i>in Dusk</i><span>Marbled, slowly folding colour</span></figcaption></figure>
+      <figure class="tile" data-style="waves" data-tonality="tide"><div class="cycle"><img src="images/shots/styles/waves-dark.jpg" alt="Waves in tide" loading="lazy"></div><figcaption><b>Waves</b> <i>in Tide</i><span>Layered ribbons with a lit rim</span></figcaption></figure>
+      <figure class="tile" data-style="orbs" data-tonality="aurora"><div class="cycle"><img src="images/shots/styles/orbs-dark.jpg" alt="Orbs in aurora" loading="lazy"></div><figcaption><b>Orbs</b> <i>in Aurora</i><span>Lit spheres</span></figcaption></figure>
+      <figure class="tile" data-style="rings" data-tonality="citrus"><div class="cycle"><img src="images/shots/styles/rings-dark.jpg" alt="Rings in citrus" loading="lazy"></div><figcaption><b>Rings</b> <i>in Citrus</i><span>Bands round an off-screen centre</span></figcaption></figure>
+      <figure class="tile" data-style="dunes" data-tonality="dusk"><div class="cycle"><img src="images/shots/styles/dunes-dark.jpg" alt="Dunes in dusk" loading="lazy"></div><figcaption><b>Dunes</b> <i>in Dusk</i><span>Stacked hills fading into haze</span></figcaption></figure>
+      <figure class="tile" data-style="contour" data-tonality="glacier"><div class="cycle"><img src="images/shots/styles/contour-dark.jpg" alt="Contour in glacier" loading="lazy"></div><figcaption><b>Contour</b> <i>in Glacier</i><span>Topographic lines</span></figcaption></figure>
+      <figure class="tile" data-style="silk" data-tonality="ember"><div class="cycle"><img src="images/shots/styles/silk-dark.jpg" alt="Silk in ember" loading="lazy"></div><figcaption><b>Silk</b> <i>in Ember</i><span>Twisting ribbons with a sheen</span></figcaption></figure>
+      <figure class="tile" data-style="aurora" data-tonality="aurora"><div class="cycle"><img src="images/shots/styles/aurora-dark.jpg" alt="Aurora in aurora" loading="lazy"></div><figcaption><b>Aurora</b> <i>in Aurora</i><span>Curtains of light</span></figcaption></figure>
+      <figure class="tile" data-style="bauhaus" data-tonality="moss"><div class="cycle"><img src="images/shots/styles/bauhaus-dark.jpg" alt="Bauhaus in moss" loading="lazy"></div><figcaption><b>Bauhaus</b> <i>in Moss</i><span>A grid of quarter and half circles</span></figcaption></figure>
+      <figure class="tile" data-style="blobs" data-tonality="dusk"><div class="cycle"><img src="images/shots/styles/blobs-dark.jpg" alt="Blobs in dusk" loading="lazy"></div><figcaption><b>Blobs</b> <i>in Dusk</i><span>A lava lamp</span></figcaption></figure>
     </div>
   </div>
 </section>
@@ -402,10 +408,45 @@
       const appearance = button.dataset.appearance;
       toggle.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === button));
       section.querySelectorAll('.tile img').forEach(img => {
-        img.src = img.src.replace(/-(dark|light)\.jpg$/, `-${appearance}.jpg`);
+        img.src = img.src.replace(/-(dark|light)(-\d)?\.jpg$/, `-${appearance}$2.jpg`);
       });
     }));
   });
+  // Each style tile shuffles: the style stays, the tonality and the seed change, as Undertone's own shuffle with
+  // a locked style. The frames come from `mise run shots` (styles/shuffles, named in shuffles.json).
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  fetch('images/shots/styles/shuffles/shuffles.json').then(r => r.json()).then(shuffles => {
+    document.querySelectorAll('#styles .tile[data-style]').forEach((tile, index) => {
+      const style = tile.dataset.style, cycle = tile.querySelector('.cycle'), label = tile.querySelector('figcaption i');
+      const tones = [tile.dataset.tonality, ...(shuffles[style] || [])];
+      const appearance = () => document.querySelector('#styles .toggle .on').dataset.appearance;
+      let frame = 0, visible = false;
+      new IntersectionObserver(entries => { visible = entries[0].isIntersecting; }).observe(tile);
+      const show = next => {
+        let img = cycle.querySelector(`img[data-frame="${next}"]`);
+        if (!img) {
+          img = document.createElement('img');
+          img.dataset.frame = next;
+          img.alt = `${style} in ${tones[next]}`;
+          img.src = `images/shots/styles/shuffles/${style}-${appearance()}-${next}.jpg`;
+          cycle.appendChild(img);
+        }
+        const reveal = () => {
+          cycle.querySelectorAll('img + img').forEach(other => other.classList.toggle('shown', other === img));
+          label.textContent = `in ${tones[next][0].toUpperCase()}${tones[next].slice(1)}`;
+          frame = next;
+        };
+        if (next === 0) {
+          cycle.querySelectorAll('img + img').forEach(other => other.classList.remove('shown'));
+          label.textContent = `in ${tones[0][0].toUpperCase()}${tones[0].slice(1)}`;
+          frame = 0;
+        } else if (img.complete) reveal(); else img.onload = reveal;
+      };
+      if (still) return;
+      setTimeout(() => setInterval(() => { if (visible) show((frame + 1) % tones.length); }, 2600), index * 240);
+    });
+  });
+
   document.querySelectorAll('.copy').forEach(button => button.addEventListener('click', async () => {
     await navigator.clipboard.writeText(button.dataset.copy);
     button.textContent = 'Copied';

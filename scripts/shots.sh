@@ -25,6 +25,28 @@ for pair in mesh:ember flow:dusk waves:tide orbs:aurora rings:citrus dunes:dusk 
   seed=$((seed + 1))
 done
 
+# Shuffles for the landing page's tiles to cycle through: each style locked, the tonality and seed picked anew, as a
+# shuffle with a locked style does. shuffles.json names each one's tonality for the captions.
+tonalities=($("$app/Contents/Helpers/undertone" tonalities))
+mkdir -p "$shots/styles/shuffles"
+json="{"
+index=0
+for style in $("$app/Contents/Helpers/undertone" styles | awk '{print $1}'); do
+  names=""
+  for n in 1 2 3 4; do
+    tonality="${tonalities[$(((index * 3 + n * 2 + 1) % ${#tonalities[@]}))]}"
+    for appearance in dark light; do
+      $render --style "$style" --tonality "$tonality" --appearance "$appearance" --seed $((1000 + index * 10 + n)) \
+        --size 640x416 --scale 1 --grain 0.02 -o "$shots/styles/shuffles/$style-$appearance-$n.jpg"
+    done
+    names="$names${names:+,}\"$tonality\""
+  done
+  [ "$index" -eq 0 ] || json="$json,"
+  json="$json\"$style\":[$names]"
+  index=$((index + 1))
+done
+echo "$json}" >"$shots/styles/shuffles/shuffles.json"
+
 # Every tonality in one style, so only the colours change.
 for tonality in $("$app/Contents/Helpers/undertone" tonalities); do
   for appearance in dark light; do
