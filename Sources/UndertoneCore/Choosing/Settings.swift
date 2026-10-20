@@ -1,6 +1,7 @@
 import Foundation
 
-/// A setting that is either fixed or picked anew at every shuffle. Style and tonality each have one, independently.
+/// A setting that was either fixed or picked anew at every shuffle, as Undertone 0.4 and earlier stored style,
+/// tonality and effect. Read only, to move old settings over.
 public enum Choice<Value: Hashable & Codable & Sendable>: Hashable, Codable, Sendable {
     case random
     case locked(Value)
@@ -68,18 +69,48 @@ public enum MotionMovement: String, CaseIterable, Codable, Sendable {
     }
 }
 
-/// Everything the user chooses. Decoding fills anything missing with its default, so a setting added later does not
-/// throw away the rest.
-public struct Settings: Hashable, Codable, Sendable {
-    public var style: Choice<Style> = .random
-    public var tonality: Choice<Tonality> = .random
-    /// None until chosen; random picks one of the effects (never none) on every shuffle.
-    public var effect: Choice<Effect> = .locked(.none)
-    public var spaces: SpacesMode = .different
+/// Shuffled among every style (or tonality) but the ones in `never`, or always the same one.
+public struct Selection<Value: CaseIterable & Hashable & Sendable>: Hashable, Sendable {
+    public enum Mode: String, CaseIterable, Sendable {
+        case shuffle, always
+    }
+
+    public var mode: Mode = .shuffle
+    /// The one used while `mode` is `.always` (kept while shuffling, so switching back finds it).
+    public var always: Value
+    /// Left out of shuffles.
+    public var never: Set<Value> = []
+
+    public init(mode: Mode = .shuffle, always: Value, never: Set<Value> = []) {
+        self.mode = mode
+        self.always = always
+        self.never = never
+    }
+
+    /// What a shuffle chooses from: everything not in `never`, or everything when that leaves nothing.
+    public var allowed: [Value] {
+        let allowed = Value.allCases.filter { !never.contains($0) }
+        return allowed.isEmpty ? Array(Value.allCases) : allowed
+    }
+
+    public func allows(_ value: Value) -> Bool {
+        mode == .always ? value == always : allowed.contains(value)
+    }
+}
+
+/// Everything the user chooses. A new install draws every style and tonality in turn, a picture shared by every
+/// space, with the vignette and a subtle grain and no other effect.
+public struct Settings: Hashable, Sendable {
+    public var style = Selection<Style>(always: .mesh)
+    public var tonality = Selection<Tonality>(always: .ember)
+    public var effects = Effects.standard
+    /// On every shuffle, one more effect, chosen at random from those not in `randomEffectNever`.
+    public var randomEffect = false
+    public var randomEffectNever: Set<Effect> = []
+    public var spaces: SpacesMode = .same
     public var interval: ShuffleInterval = .never
     /// A new picture when the Mac wakes or Undertone starts.
     public var shuffleOnWake = false
-    public var grain: Float = 0.035
     /// A black strip the height of the menu bar on displays with a notch, so the notch disappears into it.
     public var hideNotch = false
     /// Black outside a rounded rectangle (below the strip, if there is one), so windows' corners meet black.
@@ -94,31 +125,106 @@ public struct Settings: Hashable, Codable, Sendable {
     /// How long the settle on unlock takes, in seconds.
     public var settleSeconds: Float = 2.5
     public var settleEasing: Movie.Easing = .easeOut
-    /// Leave the desktop picture alone: nothing is set or put back.
+    /// Leave the desktop picture alone: nothing is set or put back. Kept in the app's state, not the config file.
     public var paused = false
 
     public init() {}
 
-    public init(from decoder: Decoder) throws {
+    /// The effects a random pick may add: on, not excluded, and not already in the set.
+    public var randomEffectChoices: [Effect] {
+        let choices = Effect.selectable.filter { !randomEffectNever.contains($0) && !effects.isOn($0) }
+        return choices
+    }
+}
+
+/// Settings as Undertone 0.3 stored them (JSON in its defaults) and 0.4 wrote them (`[picture]` in the config file):
+/// read once, and turned into today's.
+struct LegacySettings: Decodable {
+    var style: Choice<Style>?
+    var tonality: Choice<Tonality>?
+    var effect: Choice<Effect>?
+    var spaces: SpacesMode?
+    var interval: ShuffleInterval?
+    var shuffleOnWake: Bool?
+    var grain: Float?
+    var hideNotch: Bool?
+    var roundCorners: Bool?
+    var showText: Bool?
+    var title: String?
+    var subtitle: String?
+    var paused: Bool?
+    var lockScreenMotion: Bool?
+    var motionSpeed: MotionSpeed?
+    var motionMovement: MotionMovement?
+    var settleSeconds: Float?
+    var settleEasing: Movie.Easing?
+
+    init() {}
+
+    init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        let d = Settings()
-        style = (try? c.decode(Choice<Style>.self, forKey: .style)) ?? d.style
-        tonality = (try? c.decode(Choice<Tonality>.self, forKey: .tonality)) ?? d.tonality
-        effect = (try? c.decode(Choice<Effect>.self, forKey: .effect)) ?? d.effect
-        spaces = (try? c.decode(SpacesMode.self, forKey: .spaces)) ?? d.spaces
-        interval = (try? c.decode(ShuffleInterval.self, forKey: .interval)) ?? d.interval
-        shuffleOnWake = (try? c.decode(Bool.self, forKey: .shuffleOnWake)) ?? d.shuffleOnWake
-        grain = (try? c.decode(Float.self, forKey: .grain)) ?? d.grain
-        hideNotch = (try? c.decode(Bool.self, forKey: .hideNotch)) ?? d.hideNotch
-        roundCorners = (try? c.decode(Bool.self, forKey: .roundCorners)) ?? d.roundCorners
-        showText = (try? c.decode(Bool.self, forKey: .showText)) ?? d.showText
-        title = (try? c.decode(String.self, forKey: .title)) ?? d.title
-        subtitle = (try? c.decode(String.self, forKey: .subtitle)) ?? d.subtitle
-        paused = (try? c.decode(Bool.self, forKey: .paused)) ?? d.paused
-        lockScreenMotion = (try? c.decode(Bool.self, forKey: .lockScreenMotion)) ?? d.lockScreenMotion
-        motionSpeed = (try? c.decode(MotionSpeed.self, forKey: .motionSpeed)) ?? d.motionSpeed
-        motionMovement = (try? c.decode(MotionMovement.self, forKey: .motionMovement)) ?? d.motionMovement
-        settleSeconds = (try? c.decode(Float.self, forKey: .settleSeconds)) ?? d.settleSeconds
-        settleEasing = (try? c.decode(Movie.Easing.self, forKey: .settleEasing)) ?? d.settleEasing
+        func value<T: Decodable>(_ key: CodingKeys) -> T? {
+            try? c.decode(T.self, forKey: key)
+        }
+        style = value(.style)
+        tonality = value(.tonality)
+        effect = value(.effect)
+        spaces = value(.spaces)
+        interval = value(.interval)
+        shuffleOnWake = value(.shuffleOnWake)
+        grain = value(.grain)
+        hideNotch = value(.hideNotch)
+        roundCorners = value(.roundCorners)
+        showText = value(.showText)
+        title = value(.title)
+        subtitle = value(.subtitle)
+        paused = value(.paused)
+        lockScreenMotion = value(.lockScreenMotion)
+        motionSpeed = value(.motionSpeed)
+        motionMovement = value(.motionMovement)
+        settleSeconds = value(.settleSeconds)
+        settleEasing = value(.settleEasing)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case style, tonality, effect, spaces, interval, shuffleOnWake, grain, hideNotch, roundCorners, showText, title
+        case subtitle, paused, lockScreenMotion, motionSpeed, motionMovement, settleSeconds, settleEasing
+    }
+
+    /// Random becomes shuffle among all; a locked one becomes always that one; grain becomes the grain effect; a
+    /// chosen effect is turned on, and a random one becomes the random effect. Anything unset keeps today's default
+    /// (but the spaces keep 0.3's default of a picture per space).
+    var settings: Settings {
+        var s = Settings()
+        if case let .locked(value) = style { s.style = Selection(mode: .always, always: value) }
+        if case let .locked(value) = tonality { s.tonality = Selection(mode: .always, always: value) }
+        if let grain { s.effects.grain = grain > 0 ? grain : nil }
+        switch effect {
+        case .random: s.randomEffect = true
+        case let .locked(value): s.effects.set(value, on: true)
+        case nil: break
+        }
+        s.spaces = spaces ?? .different
+        if let interval { s.interval = interval }
+        if let shuffleOnWake { s.shuffleOnWake = shuffleOnWake }
+        if let hideNotch { s.hideNotch = hideNotch }
+        if let roundCorners { s.roundCorners = roundCorners }
+        if let showText { s.showText = showText }
+        if let title { s.title = title }
+        if let subtitle { s.subtitle = subtitle }
+        if let paused { s.paused = paused }
+        if let lockScreenMotion { s.lockScreenMotion = lockScreenMotion }
+        if let motionSpeed { s.motionSpeed = motionSpeed }
+        if let motionMovement { s.motionMovement = motionMovement }
+        if let settleSeconds { s.settleSeconds = settleSeconds }
+        if let settleEasing { s.settleEasing = settleEasing }
+        return s
+    }
+}
+
+public extension Settings {
+    /// Settings Undertone 0.3 kept in its defaults, as JSON.
+    static func fromLegacyJSON(_ data: Data) -> Settings? {
+        (try? JSONDecoder().decode(LegacySettings.self, from: data))?.settings
     }
 }

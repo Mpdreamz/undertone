@@ -17,8 +17,8 @@ dark half in dark mode, a new one every hour, day or wake if you like.
 
 | | |
 |---|---|
-| [Getting started](getting-started/index.md) | Install Undertone and find your way round its menu. |
+| [Getting started](getting-started/index.md) | Install Undertone and find your way round its menu and settings. |
 | [Pictures](pictures/index.md) | The eleven styles, the eight tonalities, and how a new picture is picked. |
-| [The desktop](desktop/index.md) | Hiding the notch, rounded corners, a picture per space, grain and a title. |
+| [The desktop](desktop/index.md) | Hiding the notch, rounded corners, a picture per space, grain, a title, and lock screen motion. |
 | [Reference](reference/index.md) | Every setting, the `undertone` command, the files Undertone keeps, and updates. |
 | [Troubleshooting](troubleshooting.md) | When the picture does not change. |

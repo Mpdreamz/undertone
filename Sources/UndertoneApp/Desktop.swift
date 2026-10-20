@@ -84,6 +84,7 @@ final class Desktop {
         if next.lockScreenMotion, !motionWasOn { MotionStudio.installSaver() }
         if !next.lockScreenMotion, motionWasOn { MotionStudio.shared.stop() }
         apply()
+        SettingsModel.shared.sync()
     }
 
     func update(_ change: (inout Settings) -> Void) {
@@ -95,6 +96,7 @@ final class Desktop {
         pick = pick.applying(next)
         Preferences.pick = pick
         apply()
+        SettingsModel.shared.sync()
     }
 
     func shuffle() {
@@ -103,6 +105,7 @@ final class Desktop {
         Preferences.pick = pick
         Preferences.lastShuffle = Date()
         apply()
+        SettingsModel.shared.sync()
     }
 
     private func shuffleIfDue() {

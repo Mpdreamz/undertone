@@ -1,7 +1,7 @@
 import AppKit
 import UndertoneCore
 
-/// The status item and its menu: shuffle, what is picked and how, the overlays, and the app's own business.
+/// The status item and its menu: what is showing, Shuffle and Pause, the two screen toggles, and the way to Settings.
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem?
@@ -21,72 +21,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         Updater.shared.start()
     }
 
-    /// Built each time it opens, so the check marks say how things are now.
+    /// Built each time it opens, so the check marks say how things are now. Quick toggles and commands only;
+    /// everything else is in Settings.
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
         let settings = desktop.settings
-        let pick = desktop.pick
+        let recipe = desktop.pick.recipe(space: "menu", settings: settings, appearance: desktop.appearance)
 
-        menu.addItem(.label(build.label))
+        let extras = Effect.selectable.filter(recipe.effects.isOn).map(\.title)
         menu.addItem(.label(
-            "\(pick.style.rawValue.capitalized) in \(pick.tonality.rawValue.capitalized)"
-                + (pick.effect == .none ? "" : ", \(pick.effect.title)")
+            "\(recipe.style.rawValue.capitalized) in \(recipe.tonality.rawValue.capitalized)"
+                + (extras.isEmpty ? "" : ", \(extras.joined(separator: ", "))")
         ))
         menu.addItem(.separator())
         menu.addItem(.action("Shuffle", key: "s") { Desktop.shared.shuffle() })
-        menu.addItem(.separator())
-
-        menu.addItem(.submenu("Style", [
-            .action("Random", on: settings.style == .random) { Desktop.shared.update { $0.style = .random } },
-            .separator(),
-        ] + Style.allCases.map { style in
-            let item = NSMenuItem.action(style.rawValue.capitalized, on: settings.style == .locked(style)) {
-                Desktop.shared.update { $0.style = .locked(style) }
-            }
-            item.toolTip = style.summary
-            return item
-        }))
-        menu.addItem(.submenu("Tonality", [
-            .action("Random", on: settings.tonality == .random) { Desktop.shared.update { $0.tonality = .random } },
-            .separator(),
-        ] + Tonality.allCases.map { tonality in
-            .action(tonality.rawValue.capitalized, on: settings.tonality == .locked(tonality)) {
-                Desktop.shared.update { $0.tonality = .locked(tonality) }
-            }
-        }))
-        menu.addItem(.submenu("Effect", [
-            .action("Random", on: settings.effect == .random) { Desktop.shared.update { $0.effect = .random } },
-            .separator(),
-        ] + Effect.allCases.map { effect in
-            let item = NSMenuItem.action(effect.title, on: settings.effect == .locked(effect)) {
-                Desktop.shared.update { $0.effect = .locked(effect) }
-            }
-            item.toolTip = effect.summary
-            return item
-        }))
-        menu.addItem(.submenu("Spaces", [
-            .action("A Picture per Space", on: settings.spaces == .different) {
-                Desktop.shared.update { $0.spaces = .different }
-            },
-            .action("The Same Picture Everywhere", on: settings.spaces == .same) {
-                Desktop.shared.update { $0.spaces = .same }
-            },
-        ]))
-        menu.addItem(.submenu("Shuffle Automatically", ShuffleInterval.allCases.map { interval in
-            .action(interval.title, on: settings.interval == interval) {
-                Desktop.shared.update { $0.interval = interval }
-            }
-        } + [
-            .separator(),
-            .action("On Login and Wake", on: settings.shuffleOnWake) {
-                Desktop.shared.update { $0.shuffleOnWake.toggle() }
-            },
-        ]))
-        menu.addItem(.submenu("Grain", [("None", 0), ("Subtle", 0.035), ("Strong", 0.06)].map { title, amount in
-            .action(title, on: abs(settings.grain - Float(amount)) < 0.001) {
-                Desktop.shared.update { $0.grain = Float(amount) }
-            }
-        }))
+        menu.addItem(.action("Pause", on: settings.paused) { Desktop.shared.update { $0.paused.toggle() } })
         menu.addItem(.separator())
         menu.addItem(.action("Hide the Notch", on: settings.hideNotch) {
             Desktop.shared.update { $0.hideNotch.toggle() }
@@ -94,12 +43,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(.action("Round Corners", on: settings.roundCorners) {
             Desktop.shared.update { $0.roundCorners.toggle() }
         })
-        menu.addItem(.action("Show Title", on: settings.showText) {
-            Desktop.shared.update { $0.showText.toggle() }
-        })
-        menu.addItem(.action("Lock Screen Motion", on: settings.lockScreenMotion) {
-            LockScreenMotion.toggle()
-        })
+        menu.addItem(.separator())
         menu.addItem(.action("Settings…", key: ",") { SettingsWindow.show() })
         menu.addItem(.action("Open Config File") { AppDelegate.openConfigFile() })
         if let first = Preferences.warnings.first {
@@ -108,15 +52,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             item.toolTip = Preferences.warnings.map(\.description).joined(separator: "\n")
             menu.addItem(item)
         }
-        menu.addItem(.separator())
-        menu.addItem(.action("Pause (Leave the Desktop Alone)", on: settings.paused) {
-            Desktop.shared.update { $0.paused.toggle() }
-        })
-        menu.addItem(.action("Open at Login", on: LaunchAtLogin.isEnabled) {
-            LaunchAtLogin.set(!LaunchAtLogin.isEnabled)
-        })
         menu.addItem(.action("Check for Updates…") { Updater.shared.checkForUpdates() })
         menu.addItem(.separator())
+        menu.addItem(.label(build.label))
         menu.addItem(NSMenuItem(
             title: "Quit Undertone",
             action: #selector(NSApplication.terminate),
@@ -126,12 +64,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 }
 
 extension AppDelegate {
-    /// Opens the config file in the editor for .toml files (or TextEdit), writing it first when there is none.
-    static func openConfigFile() {
+    /// Opens the config file in the editor for .toml files (or TextEdit), or shows it in Finder, writing it first
+    /// when there is none.
+    static func openConfigFile(reveal: Bool = false) {
         if !FileManager.default.fileExists(atPath: Preferences.resolvedConfigURL.path) {
             Preferences.settings = Desktop.shared.settings
         }
         let url = Preferences.resolvedConfigURL
+        if reveal {
+            NSWorkspace.shared.activateFileViewerSelecting([url])
+            return
+        }
         if NSWorkspace.shared.urlForApplication(toOpen: url) != nil {
             NSWorkspace.shared.open(url)
         } else {

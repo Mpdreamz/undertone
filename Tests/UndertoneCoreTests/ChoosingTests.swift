@@ -13,41 +13,62 @@ struct ChoosingTests {
         }
     }
 
-    @Test func lockedChoicesStayAndRandomOnesChange() {
+    @Test func alwaysStaysAndShuffleChanges() {
         var settings = Settings()
-        settings.style = .locked(.waves)
+        settings.style = Selection(mode: .always, always: .waves)
         var rng = Fixed()
         var pick = Pick.next(after: nil, settings: settings, rng: &rng)
         for _ in 0 ..< 50 {
             let next = Pick.next(after: pick, settings: settings, rng: &rng)
             #expect(next.style == .waves)
-            #expect(next.tonality != pick.tonality, "a random tonality never repeats on a shuffle")
+            #expect(next.tonality != pick.tonality, "a shuffled tonality never repeats")
             #expect(next.seed != pick.seed)
             pick = next
         }
     }
 
-    @Test func randomStyleAndRandomTonalityAreIndependent() {
+    @Test func shufflesNeverPickWhatIsLeftOut() {
         var settings = Settings()
-        settings.tonality = .locked(.moss)
+        settings.style.never = [.bauhaus, .contour, .mesh]
+        settings.tonality.never = Set(Tonality.allCases.filter { $0 != .moss && $0 != .tide })
         var rng = Fixed()
-        let styles = Set((0 ..< 40).map { _ in Pick.next(after: nil, settings: settings, rng: &rng).style })
-        #expect(styles.count > 5)
-        #expect((0 ..< 10).allSatisfy { _ in Pick.next(after: nil, settings: settings, rng: &rng).tonality == .moss })
+        var styles = Set<Style>(), tonalities = Set<Tonality>()
+        var pick: Pick?
+        for _ in 0 ..< 200 {
+            let next = Pick.next(after: pick, settings: settings, rng: &rng)
+            styles.insert(next.style)
+            tonalities.insert(next.tonality)
+            pick = next
+        }
+        #expect(styles == Set(Style.allCases).subtracting([.bauhaus, .contour, .mesh]))
+        #expect(tonalities == [.moss, .tide])
     }
 
-    @Test func lockingAChoiceChangesThePickButNotItsSeed() {
+    @Test func leavingEverythingOutStillShuffles() {
+        var settings = Settings()
+        settings.style.never = Set(Style.allCases)
+        #expect(settings.style.allowed.count == Style.allCases.count)
+        var rng = Fixed()
+        #expect(Style.allCases.contains(Pick.next(after: nil, settings: settings, rng: &rng).style))
+    }
+
+    @Test func changingTheSettingsKeepsWhatItCanAndTheSeed() {
         let pick = Pick(style: .mesh, tonality: .ember, seed: 7)
         var settings = Settings()
-        settings.tonality = .locked(.glacier)
-        let applied = pick.applying(settings)
-        #expect(applied == Pick(style: .mesh, tonality: .glacier, seed: 7))
+        settings.tonality = Selection(mode: .always, always: .glacier)
+        #expect(pick.applying(settings) == Pick(style: .mesh, tonality: .glacier, seed: 7))
+        var excluded = Settings()
+        excluded.style.never = [.mesh]
+        let moved = pick.applying(excluded)
+        #expect(moved.style != .mesh, "leaving out the style showing changes it")
+        #expect(moved.tonality == .ember && moved.seed == 7)
+        #expect(pick.applying(Settings()) == pick, "nothing to change")
     }
 
     @Test func spacesShareASeedOrHaveTheirOwn() {
         let pick = Pick(style: .dunes, tonality: .dusk, seed: 1234)
         var settings = Settings()
-        settings.spaces = .same
+        #expect(settings.spaces == .same, "one picture everywhere unless asked")
         let a = pick.recipe(space: "A", settings: settings, appearance: .dark)
         let b = pick.recipe(space: "B", settings: settings, appearance: .dark)
         #expect(a == b)
@@ -56,33 +77,37 @@ struct ChoosingTests {
         let b2 = pick.recipe(space: "B", settings: settings, appearance: .dark)
         #expect(a2.seed != b2.seed)
         #expect(a2.tonality == b2.tonality && a2.style == b2.style)
-        // The same space keeps its picture.
         #expect(a2 == pick.recipe(space: "A", settings: settings, appearance: .dark))
     }
 
-    @Test func aRandomEffectIsNeverNoneAndNeverRepeats() {
-        var settings = Settings()
-        settings.effect = .random
+    @Test func theRandomEffectIsOffUntilAskedForThenNeverRepeats() {
         var rng = Fixed()
+        let plain = Pick.next(after: nil, settings: Settings(), rng: &rng)
+        #expect(plain.effect == .none)
+        #expect(plain.recipe(space: "A", settings: Settings(), appearance: .dark).effects == .standard)
+        var settings = Settings()
+        settings.randomEffect = true
+        settings.randomEffectNever = [.dither, .paper]
+        settings.effects.halftone = .init()
         var pick = Pick.next(after: nil, settings: settings, rng: &rng)
         for _ in 0 ..< 40 {
             let next = Pick.next(after: pick, settings: settings, rng: &rng)
-            #expect(next.effect != .none)
+            #expect(![.none, .dither, .paper, .halftone].contains(next.effect), "never none, left out, or already on")
             #expect(next.effect != pick.effect)
             pick = next
         }
+        let recipe = pick.recipe(space: "A", settings: settings, appearance: .dark)
+        #expect(recipe.effects.isOn(pick.effect) && recipe.effects.isOn(.halftone))
+        #expect(recipe.effects.grain == 0.035, "the random effect joins the chosen ones")
     }
 
-    @Test func effectsAreOffUntilChosen() {
-        var rng = Fixed()
-        #expect(Pick.next(after: nil, settings: Settings(), rng: &rng).effect == .none)
+    @Test func turningTheRandomEffectOnShowsOneAndOffRemovesIt() {
+        let pick = Pick(style: .mesh, tonality: .ember, seed: 7)
         var settings = Settings()
-        settings.effect = .locked(.halftone)
-        let pick = Pick(style: .mesh, tonality: .ember, seed: 1)
-        #expect(pick.applying(settings).effect == .halftone)
-        #expect(pick.applying(settings).recipe(space: "A", settings: settings, appearance: .dark).effect == .halftone)
-        settings.effect = .random
-        #expect(pick.applying(settings).effect != .none, "choosing random shows an effect straight away")
+        settings.randomEffect = true
+        let on = pick.applying(settings)
+        #expect(on.effect != .none)
+        #expect(on.applying(Settings()).effect == .none)
     }
 
     @Test func aPickSavedBeforeEffectsStillLoads() throws {
@@ -90,20 +115,19 @@ struct ChoosingTests {
         #expect(try JSONDecoder().decode(Pick.self, from: old) == Pick(style: .waves, tonality: .tide, seed: 42))
     }
 
-    @Test func settingsMissingKeysTakeTheirDefaults() throws {
-        let decoded = try JSONDecoder().decode(Settings.self, from: Data(#"{"hideNotch":true}"#.utf8))
-        var expected = Settings()
-        expected.hideNotch = true
-        #expect(decoded == expected)
-        #expect(Settings().showText == false, "the title is off until asked for")
-    }
-
-    @Test func settingsRoundTrip() throws {
-        var settings = Settings()
-        settings.style = .locked(.bauhaus)
-        settings.interval = .daily
-        settings.title = "{computer}!"
-        #expect(try JSONDecoder().decode(Settings.self, from: JSONEncoder().encode(settings)) == settings)
+    @Test func undertone03SettingsMoveOver() throws {
+        let json = Data(#"""
+        {"style":{"locked":{"_0":"aurora"}},"tonality":{"random":{}},"effect":{"locked":{"_0":"glass"}},
+         "grain":0,"hideNotch":true,"interval":"daily"}
+        """#.utf8)
+        let settings = try #require(Settings.fromLegacyJSON(json))
+        #expect(settings.style == Selection(mode: .always, always: .aurora))
+        #expect(settings.tonality.mode == .shuffle && settings.tonality.never.isEmpty)
+        #expect(settings.effects.glass != nil)
+        #expect(settings.effects.grain == nil, "grain 0 is off")
+        #expect(settings.effects.vignette == 1)
+        #expect(settings.hideNotch && settings.interval == .daily)
+        #expect(settings.spaces == .different, "0.3's default stays for those who had it")
     }
 
     @Test func placeholdersAreFilledIn() {
@@ -126,7 +150,8 @@ struct ChoosingTests {
 @Suite(.timeLimit(.minutes(1)))
 struct ComposerTests {
     static let picture = Renderer.render(
-        Recipe(style: .mesh, tonality: .dusk, appearance: .light, seed: 2, grain: 0), width: 200, height: 120
+        Recipe(style: .mesh, tonality: .dusk, appearance: .light, seed: 2, effects: Effects(grain: nil)), width: 200,
+        height: 120
     )
 
     static func pixel(_ image: CGImage, _ x: Int, _ y: Int) -> [UInt8] {

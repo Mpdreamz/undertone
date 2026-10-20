@@ -4,7 +4,7 @@ import UndertoneCore
 // undertone: Undertone from a shell or a hotkey daemon. It starts in milliseconds and needs no permission.
 
 let usage = """
-usage: undertone render [--style S] [--tonality T] [--appearance dark|light] [--seed N] [--grain G] [--effect E]
+usage: undertone render [--style S] [--tonality T] [--appearance dark|light] [--seed N] [--grain G] [--vignette V] [--effect E]…
                         [--size WxH] [--scale K] [--strip PT] [--corners PT] [--title T] [--subtitle T]
                         -o <file.png|file.jpg>
        undertone shuffle
@@ -28,7 +28,8 @@ usage: undertone render [--style S] [--tonality T] [--appearance dark|light] [--
       what it cannot use, failing when there is anything.
   render
       Draw one picture to a PNG (a JPEG when the file ends in .jpg), without the app. --size is in pixels
-      (default 3024x1964, a 14" MacBook Pro), --scale the pixels to a point (default 2). Defaults: mesh, ember, dark, seed 1, grain 0.035.
+      (default 3024x1964, a 14" MacBook Pro), --scale the pixels to a point (default 2). Defaults: mesh, ember,
+      dark, seed 1, vignette 1, grain 0.035; --effect turns an effect on at its defaults, and can be repeated.
       --strip draws the black notch strip that tall, --corners rounds the corners below it, both in points.
 """
 
@@ -61,8 +62,15 @@ func render(_ arguments: ArraySlice<String>, movie: Bool = false) {
             recipe.tonality = parse(Tonality(rawValue: value), "no tonality \(value) (see undertone tonalities)")
         case "--appearance": recipe.appearance = parse(Appearance(rawValue: value), "appearance is dark or light")
         case "--seed": recipe.seed = parse(UInt64(value), "seed is a whole number")
-        case "--effect": recipe.effect = parse(Effect(rawValue: value), "no effect \(value) (see undertone effects)")
-        case "--grain": recipe.grain = parse(Float(value), "grain is a number, e.g. 0.035")
+        case "--effect":
+            let effect = parse(Effect(rawValue: value), "no effect \(value) (see undertone effects)")
+            recipe.effects.set(effect, on: true)
+        case "--grain":
+            let amount = parse(Float(value), "grain is a number, e.g. 0.035")
+            recipe.effects.grain = amount > 0 ? amount : nil
+        case "--vignette":
+            let strength = parse(Float(value), "vignette is a number, e.g. 1")
+            recipe.effects.vignette = strength > 0 ? strength : nil
         case "--scale": scale = parse(Float(value), "scale is a number, e.g. 2")
         case "--size":
             let parts = value.split(separator: "x").compactMap { Int($0) }

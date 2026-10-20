@@ -8,20 +8,17 @@ public struct Recipe: Hashable, Codable, Sendable {
     public var tonality: Tonality
     public var appearance: Appearance
     public var seed: UInt64
-    /// Strength of the film grain, 0 for none; 0.035 is subtle, 0.06 is plainly there.
-    public var grain: Float
-    public var effect: Effect
+    /// What goes over the style: the vignette and grain unless told otherwise.
+    public var effects: Effects
 
     public init(
-        style: Style, tonality: Tonality, appearance: Appearance, seed: UInt64, grain: Float = 0.035,
-        effect: Effect = .none
+        style: Style, tonality: Tonality, appearance: Appearance, seed: UInt64, effects: Effects = .standard
     ) {
         self.style = style
         self.tonality = tonality
         self.appearance = appearance
         self.seed = seed
-        self.grain = grain
-        self.effect = effect
+        self.effects = effects
     }
 }
 
@@ -84,9 +81,15 @@ public enum Renderer {
         )
         let palette = recipe.tonality.palette(recipe.appearance)
         var rng = RNG(seed: recipe.seed)
-        let shader = recipe.effect.wrap(recipe.style.shader(palette, &rng, frame), palette: palette, frame: frame)
+        let effects = recipe.effects
+        // Glass, then halftone: both read the picture somewhere else, so they wrap the style.
+        var shader = recipe.style.shader(palette, &rng, frame)
+        if let glass = effects.glass { shader = Effect.glass(shader, glass, frame: frame) }
+        if let halftone = effects.halftone {
+            shader = Effect.halftone(shader, halftone, palette: palette, frame: frame)
+        }
         let finish = Finish(recipe: recipe, frame: frame, isDark: palette.isDark)
-        let effect = Effect.Finish(recipe.effect, seed: recipe.seed, frame: frame, isDark: palette.isDark)
+        let effect = Effect.Finish(effects, seed: recipe.seed, frame: frame, isDark: palette.isDark)
         // Bands of rows, more than there are cores, so a slow band does not hold the rest up; or, capped, one band per
         // thread.
         let bands = min(height, threads.map { max($0, 1) } ?? ProcessInfo.processInfo.activeProcessorCount * 8)
@@ -108,8 +111,8 @@ public enum Renderer {
                     }
                 }
             }
-            if recipe.effect == .bloom {
-                Effect.bloom(buffer.baseAddress!, width: width, height: height, isDark: palette.isDark)
+            if let bloom = effects.bloom {
+                Effect.bloom(buffer.baseAddress!, width: width, height: height, isDark: palette.isDark, bloom)
             }
         }
 
@@ -157,9 +160,9 @@ private struct Finish {
     let cell: Float
 
     init(recipe: Recipe, frame: Frame, isDark: Bool) {
-        grain = recipe.grain
+        grain = recipe.effects.grain ?? 0
         seed = UInt32(truncatingIfNeeded: recipe.seed ^ (recipe.seed >> 32))
-        vignette = isDark ? 0.35 : 0.08
+        vignette = (isDark ? 0.35 : 0.08) * (recipe.effects.vignette ?? 0)
         cell = max(frame.scale, 1)
     }
 

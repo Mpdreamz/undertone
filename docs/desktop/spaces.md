@@ -4,8 +4,8 @@ description: A different picture on every space, or the same one everywhere.
 
 # Spaces
 
-**Spaces › A Picture per Space** (the default) gives every space its own picture: the same style and tonality, laid
-out from a seed of its own. **The Same Picture Everywhere** shows one picture on every space.
+Out of the box every space shows the same picture. **A picture per space**, on the **Screen** page of **Settings…**,
+gives each space its own instead: the same style, tonality and effects, laid out from a seed of its own.
 
 | Space 1 | Space 2 | Space 3 |
 |---|---|---|
