@@ -34,6 +34,40 @@ public enum ShuffleInterval: String, CaseIterable, Codable, Sendable {
     }
 }
 
+/// How fast lock screen motion drifts: the length of its loop.
+public enum MotionSpeed: String, CaseIterable, Codable, Sendable {
+    case calm, normal, lively
+
+    public var seconds: Double {
+        switch self {
+        case .calm: 20
+        case .normal: 12
+        case .lively: 8
+        }
+    }
+
+    public var title: String {
+        rawValue.capitalized
+    }
+}
+
+/// How far lock screen motion moves things, as a multiple of each style's own drift.
+public enum MotionMovement: String, CaseIterable, Codable, Sendable {
+    case subtle, normal, strong
+
+    public var amount: Float {
+        switch self {
+        case .subtle: 0.5
+        case .normal: 1
+        case .strong: 1.6
+        }
+    }
+
+    public var title: String {
+        rawValue.capitalized
+    }
+}
+
 /// Everything the user chooses. Decoding fills anything missing with its default, so a setting added later does not
 /// throw away the rest.
 public struct Settings: Hashable, Codable, Sendable {
@@ -57,6 +91,11 @@ public struct Settings: Hashable, Codable, Sendable {
     public var subtitle = "{user} · macOS {os}"
     /// Render each display's picture in motion for Undertone's screen saver, and settle it on unlock.
     public var lockScreenMotion = false
+    public var motionSpeed: MotionSpeed = .normal
+    public var motionMovement: MotionMovement = .normal
+    /// How long the settle on unlock takes, in seconds.
+    public var settleSeconds: Float = 2.5
+    public var settleEasing: Movie.Easing = .easeOut
     /// Leave the desktop picture alone: nothing is set or put back.
     public var paused = false
 
@@ -80,5 +119,9 @@ public struct Settings: Hashable, Codable, Sendable {
         subtitle = (try? c.decode(String.self, forKey: .subtitle)) ?? d.subtitle
         paused = (try? c.decode(Bool.self, forKey: .paused)) ?? d.paused
         lockScreenMotion = (try? c.decode(Bool.self, forKey: .lockScreenMotion)) ?? d.lockScreenMotion
+        motionSpeed = (try? c.decode(MotionSpeed.self, forKey: .motionSpeed)) ?? d.motionSpeed
+        motionMovement = (try? c.decode(MotionMovement.self, forKey: .motionMovement)) ?? d.motionMovement
+        settleSeconds = (try? c.decode(Float.self, forKey: .settleSeconds)) ?? d.settleSeconds
+        settleEasing = (try? c.decode(Movie.Easing.self, forKey: .settleEasing)) ?? d.settleEasing
     }
 }

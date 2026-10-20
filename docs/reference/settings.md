@@ -22,6 +22,10 @@ Everything is set from the menu or **Settings…**, and applies straight away.
 | Title | `{computer}` | Settings | See [A title](../desktop/grain-and-title.md#a-title). |
 | Subtitle | `{user} · macOS {os}` | Settings | |
 | Lock screen motion | Off | Menu | Needs Undertone chosen as the screen saver. |
+| Motion speed | Normal | Settings | Calm (20 s loop), Normal (12 s), Lively (8 s). |
+| Motion movement | Normal | Settings | Subtle, Normal, Strong. |
+| Settle | 2.5 s | Settings | 1 to 5 seconds. |
+| Easing | Ease Out | Settings | Glide, Ease Out, Spring. |
 | Pause | Off | Menu | Leave the desktop alone. |
 | Open at login | Off | Menu | A login item. |
 

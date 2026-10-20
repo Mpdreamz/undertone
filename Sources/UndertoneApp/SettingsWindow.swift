@@ -73,6 +73,33 @@ struct SettingsView: View {
                 .disabled(!settings.roundCorners)
             }
             Section {
+                Picker("Speed", selection: $settings.motionSpeed) {
+                    ForEach(MotionSpeed.allCases, id: \.self) { Text($0.title).tag($0) }
+                }
+                Picker("Movement", selection: $settings.motionMovement) {
+                    ForEach(MotionMovement.allCases, id: \.self) { Text($0.title).tag($0) }
+                }
+                LabeledContent("Settle") {
+                    HStack {
+                        Slider(value: $settings.settleSeconds, in: 1 ... 5, step: 0.5)
+                        Text(String(format: "%.1f s", settings.settleSeconds))
+                            .monospacedDigit()
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                Picker("Easing", selection: $settings.settleEasing) {
+                    ForEach(Movie.Easing.allCases, id: \.self) { Text($0.title).tag($0) }
+                }
+            } header: {
+                Text("Lock Screen Motion")
+            } footer: {
+                Text(settings.lockScreenMotion
+                    ? "Changes draw the movies again in the background, which takes a few minutes."
+                    : "Turn on Lock Screen Motion in the menu to use these.")
+                    .foregroundStyle(.secondary)
+            }
+            .disabled(!settings.lockScreenMotion)
+            Section {
                 Toggle("Show a title", isOn: $settings.showText)
                 TextField("Title", text: $settings.title)
                 TextField("Subtitle", text: $settings.subtitle)

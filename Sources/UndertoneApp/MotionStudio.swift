@@ -12,14 +12,36 @@ final class MotionStudio {
 
     private let log = Logger(subsystem: "io.github.mpdreamz.undertone", category: "motion")
     /// What each display should have, newest wins.
-    private var wanted: [String: Desktop.Target] = [:]
+    private var wanted: [String: (target: Desktop.Target, timing: Timing)] = [:]
+
+    /// Speed, movement and settle, from the settings; part of each movie's name, so a change draws new ones.
+    struct Timing: Hashable, Sendable {
+        var loopSeconds: Double
+        var movement: Float
+        var settleSeconds: Double
+        var easing: Movie.Easing
+
+        init(_ settings: Settings) {
+            loopSeconds = settings.motionSpeed.seconds
+            movement = settings.motionMovement.amount
+            settleSeconds = Double(min(max(settings.settleSeconds, 0.5), 8))
+            easing = settings.settleEasing
+        }
+
+        var loopKey: String {
+            "\(Int(loopSeconds))s-\(Int(movement * 100))"
+        }
+
+        var settleKey: String {
+            "\(loopKey)-\(Int(settleSeconds * 10))-\(easing.rawValue)"
+        }
+    }
+
     private var rendering: Task<Void, Never>?
     private var pending: DispatchWorkItem?
     private var screenSaverRan = false
     private var settleWindows: [NSWindow] = []
 
-    nonisolated static let loopSeconds = 12.0
-    nonisolated static let settleSeconds = 2.5
     nonisolated static let fps = 24
     /// A quarter of the cores, at least two: a few minutes in the background rather than a minute at full tilt.
     nonisolated static let threads = max(ProcessInfo.processInfo.activeProcessorCount / 4, 2)
@@ -39,7 +61,7 @@ final class MotionStudio {
     /// The movies `target` needs on `display`. Rendering waits for things to settle (a burst of space switches asks
     /// for many pictures), then works through what is still wanted.
     func want(_ target: Desktop.Target, display: String) {
-        wanted[display] = target
+        wanted[display] = (target, Timing(Desktop.shared.settings))
         pending?.cancel()
         let work = DispatchWorkItem { MainActor.assumeIsolated { self.renderWanted() } }
         pending = work
@@ -52,9 +74,9 @@ final class MotionStudio {
         wanted = [:]
         rendering = Task.detached(priority: .utility) { [log] in
             var manifest = MotionManifest.load()
-            for (display, target) in jobs.sorted(by: { $0.key < $1.key }) {
+            for (display, job) in jobs.sorted(by: { $0.key < $1.key }) {
                 do {
-                    let entry = try Self.render(target)
+                    let entry = try Self.render(job.target, timing: job.timing)
                     manifest.displays[display] = entry
                     try manifest.save()
                     log.info("motion ready for \(display, privacy: .public): \(entry.loop, privacy: .public)")
@@ -71,7 +93,9 @@ final class MotionStudio {
     }
 
     /// Renders at the display's size in points: motion hides the difference, and it is a quarter of the work.
-    private nonisolated static func render(_ target: Desktop.Target) throws -> MotionManifest.Entry {
+    private nonisolated static func render(
+        _ target: Desktop.Target, timing: Timing
+    ) throws -> MotionManifest.Entry {
         let scale = max(target.overlay.scale, 1)
         let width = Int((Float(target.width) / scale).rounded()) & ~1
         let height = Int((Float(target.height) / scale).rounded()) & ~1
@@ -80,12 +104,17 @@ final class MotionStudio {
         overlay.cornerRadius = Int((Float(overlay.cornerRadius) / scale).rounded())
         overlay.scale = 1
         let name = Fingerprint.of(target.recipe, overlay, width: width, height: height)
-        let entry = MotionManifest.Entry(loop: "\(name)-loop.mov", settle: "\(name)-settle.mov")
+        let entry = MotionManifest.Entry(
+            loop: "\(name)-\(timing.loopKey)-loop.mov", settle: "\(name)-\(timing.settleKey)-settle.mov"
+        )
         let folder = MotionManifest.folder
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         for (file, motions) in [
-            (entry.loop, Movie.loop(seconds: loopSeconds, fps: fps)),
-            (entry.settle, Movie.settle(from: 0, loopSeconds: loopSeconds, seconds: settleSeconds, fps: fps)),
+            (entry.loop, Movie.loop(seconds: timing.loopSeconds, fps: fps, movement: timing.movement)),
+            (entry.settle, Movie.settle(
+                from: 0, loopSeconds: timing.loopSeconds, seconds: timing.settleSeconds, fps: fps,
+                movement: timing.movement, easing: timing.easing
+            )),
         ] {
             let url = folder.appendingPathComponent(file)
             if FileManager.default.fileExists(atPath: url.path) { continue }

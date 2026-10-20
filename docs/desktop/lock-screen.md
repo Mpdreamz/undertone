@@ -20,6 +20,19 @@ other, silk twists, blobs merge and split, contour lines flow, and rings breathe
 The motion plays while the screen saver runs: after the idle time you set in System Settings, or from a hot corner.
 Locking straight away (⌃⌘Q, or closing the lid) shows the still lock screen.
 
+## Timing
+
+**Settings…** has a Lock Screen Motion section:
+
+| Setting | Options | |
+|---|---|---|
+| Speed | Calm, Normal, Lively | The loop's length: 20, 12 or 8 seconds. |
+| Movement | Subtle, Normal, Strong | How far things move: half, the style's own, or 1.6 times as far. |
+| Settle | 1 to 5 seconds | How long the slow-down on unlock takes (2.5 by default). |
+| Easing | Glide, Ease Out, Spring | How it comes to rest: Glide keeps moving and fades out late; Ease Out (the default) slows at once and creeps into place; Spring swings a little past the still picture and back. |
+
+Changing any of them draws the movies again in the background.
+
 ## What it costs
 
 After every shuffle, light and dark switch, or change to the notch, corners or title, Undertone draws a 12-second loop

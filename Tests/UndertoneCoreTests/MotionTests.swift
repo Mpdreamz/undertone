@@ -33,6 +33,46 @@ struct MotionTests {
         #expect(zip(steps, steps.dropFirst()).allSatisfy { $0 >= $1 }, "the drift only slows")
     }
 
+    @Test(arguments: Movie.Easing.allCases)
+    func everyEasingStartsInMotionAndEndsOnTheStill(easing: Movie.Easing) {
+        let settle = Movie.settle(from: 0, loopSeconds: 12, seconds: 3, fps: 24, movement: 1.6, easing: easing)
+        #expect(settle.count == 72)
+        #expect(abs(settle[0].amount - 1.6) < 0.001, "\(easing) starts at the loop's reach")
+        #expect(settle.last == .still)
+        #expect(abs(settle[settle.count - 2].amount) < 0.2, "\(easing) arrives gently")
+        let times = settle.dropLast().map(\.time)
+        #expect(zip(times, times.dropFirst()).allSatisfy { $0 <= $1 }, "\(easing) never runs the drift backwards")
+    }
+
+    @Test func aSpringSwingsPastTheStillAndGlideHoldsOnLonger() {
+        let spring = Movie.settle(from: 0, loopSeconds: 12, seconds: 3, fps: 24, easing: .spring)
+        #expect(spring.contains { $0.amount < -0.05 }, "a spring passes the still picture")
+        let glide = Movie.settle(from: 0, loopSeconds: 12, seconds: 3, fps: 24, easing: .glide)
+        let easeOut = Movie.settle(from: 0, loopSeconds: 12, seconds: 3, fps: 24, easing: .easeOut)
+        #expect(glide[24].amount > easeOut[24].amount, "a third of the way in, glide has slowed less")
+    }
+
+    @Test func movementScalesTheLoop() {
+        #expect(Movie.loop(seconds: 1, fps: 10, movement: 0.5).allSatisfy { $0.amount == 0.5 })
+        let subtle = MotionTests.draw(.waves, Motion(time: 0.3, amount: 0.5))
+        let strong = MotionTests.draw(.waves, Motion(time: 0.3, amount: 1.6))
+        let still = MotionTests.draw(.waves, .still)
+        let moved = { (picture: Picture) in zip(picture.pixels, still.pixels).count(where: { $0 != $1 }) }
+        #expect(moved(strong) > moved(subtle))
+    }
+
+    @Test func timingSettingsHaveDefaultsAndLoad() throws {
+        let settings = try JSONDecoder().decode(
+            Settings.self,
+            from: Data(#"{"motionSpeed":"calm","settleEasing":"spring"}"#.utf8)
+        )
+        #expect(settings.motionSpeed.seconds == 20)
+        #expect(settings.settleEasing == .spring)
+        #expect(settings.motionMovement == .normal)
+        #expect(settings.settleSeconds == 2.5)
+        #expect(Settings().motionSpeed == .normal)
+    }
+
     @Test func aLoopCoversOneCycle() {
         let loop = Movie.loop(seconds: 2, fps: 10)
         #expect(loop.count == 20)
