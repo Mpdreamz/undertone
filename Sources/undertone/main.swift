@@ -5,14 +5,19 @@ import UndertoneCore
 
 let usage = """
 usage: undertone render [--style S] [--tonality T] [--appearance dark|light] [--seed N] [--grain G]
-                        [--size WxH] [--scale K] -o <file.png>
+                        [--size WxH] [--scale K] [--strip PT] [--corners PT] [--title T] [--subtitle T]
+                        -o <file.png>
+       undertone shuffle
        undertone styles
        undertone tonalities
        undertone --version
 
+  shuffle
+      A new picture now, in Undertone.app (which must be running), as the menu's Shuffle.
   render
       Draw one picture to a PNG, without the app: --size is in pixels (default 3024x1964, a 14" MacBook Pro),
       --scale the pixels to a point (default 2). Defaults: mesh, ember, dark, seed 1, grain 0.035.
+      --strip draws the black notch strip that tall, --corners rounds the corners below it, both in points.
 """
 
 func fail(_ message: String, code: Int32 = 1) -> Never {
@@ -30,6 +35,8 @@ func render(_ arguments: ArraySlice<String>) {
     var width = 3024, height = 1964
     var scale: Float = 2
     var output: String?
+    var strip: Float = 0, corners: Float = 0
+    var title = "", subtitle = ""
     var rest = arguments
     while let flag = rest.popFirst() {
         guard let value = rest.popFirst() else { fail("\(flag) needs a value") }
@@ -45,13 +52,23 @@ func render(_ arguments: ArraySlice<String>) {
             let parts = value.split(separator: "x").compactMap { Int($0) }
             guard parts.count == 2, parts.allSatisfy({ $0 > 0 }) else { fail("size is WxH, e.g. 3024x1964") }
             (width, height) = (parts[0], parts[1])
+        case "--strip": strip = parse(Float(value), "strip is in points, e.g. 37")
+        case "--corners": corners = parse(Float(value), "corners is in points, e.g. 10")
+        case "--title": title = value
+        case "--subtitle": subtitle = value
         case "-o", "--output": output = value
         default: fail("unknown option \(flag)\n\(usage)", code: 2)
         }
     }
     guard let output else { fail("render needs -o <file.png>", code: 2) }
     let picture = Renderer.render(recipe, width: width, height: height, scale: scale)
-    guard let png = picture.png() else { fail("could not encode the PNG") }
+    let overlay = Overlay(
+        strip: Int((strip * scale).rounded()), cornerRadius: Int((corners * scale).rounded()),
+        title: title, subtitle: subtitle, scale: scale
+    )
+    guard let image = Composer.compose(picture, overlay, appearance: recipe.appearance),
+          let png = Composer.png(image)
+    else { fail("could not encode the PNG") }
     do { try png.write(to: URL(fileURLWithPath: output)) } catch { fail("could not write \(output): \(error)") }
 }
 
@@ -59,6 +76,10 @@ let arguments = Array(CommandLine.arguments.dropFirst())
 switch arguments.first {
 case "render":
     render(arguments.dropFirst())
+case "shuffle":
+    DistributedNotificationCenter.default().postNotificationName(
+        .init("io.github.mpdreamz.undertone.shuffle"), object: nil, userInfo: nil, deliverImmediately: true
+    )
 case "styles":
     for style in Style.allCases {
         print("\(style.rawValue.padding(toLength: 10, withPad: " ", startingAt: 0))\(style.summary)")
