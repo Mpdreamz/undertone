@@ -289,7 +289,7 @@ public enum ConfigFile {
 
     private static let keys: [String: [String: Setter]] = [
         "style": [
-            "mode": named { (s: inout Settings, v: Selection<Style>.Mode) in s.style.mode = v },
+            "mode": name(["shuffle": Selection<Style>.Mode.shuffle, "always": .always]) { $0.style.mode = $1 },
             "always": named { (s: inout Settings, v: Style) in s.style.always = v },
             "never": names { (s: inout Settings, v: Set<Style>) in s.style.never = v },
         ],
@@ -297,6 +297,7 @@ public enum ConfigFile {
             "mode": named { (s: inout Settings, v: Selection<Tonality>.Mode) in s.tonality.mode = v },
             "always": named { (s: inout Settings, v: Tonality) in s.tonality.always = v },
             "never": names { (s: inout Settings, v: Set<Tonality>) in s.tonality.never = v },
+            "hemisphere": named { (s: inout Settings, v: Hemisphere) in s.hemisphere = v },
         ],
         "effects": [
             "random": bool { $0.randomEffect = $1 },
@@ -425,9 +426,12 @@ public enum ConfigFile {
         never = \(list(settings.style.never, order: Style.allCases))  # left out of shuffles: \(styles)
 
         [tonality]
-        mode = \(quote(settings.tonality.mode.rawValue))  # shuffle or always
+        mode = \(quote(settings.tonality.mode
+                .rawValue))  # shuffle, season (suits the time of year, never mono) or always
         always = \(quote(settings.tonality.always.rawValue))  # the tonality when mode = "always"
         never = \(list(settings.tonality.never, order: Tonality.allCases))  # left out of shuffles: \(tonalities)
+        hemisphere = \(quote(settings.hemisphere
+                .rawValue))  # whose seasons: auto (from the Mac's region), north or south
 
         # Effects go over every picture, in a fixed order: glass, halftone, vignette, bloom, posterize, paper, leak,
         # dither, grain. Each has its own section; on = false turns it off and keeps its settings here.

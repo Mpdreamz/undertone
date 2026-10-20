@@ -11,7 +11,7 @@ and a subtle grain.
 | Setting | Default | Settings page | Config file |
 |---|---|---|---|
 | Style | Shuffle among all | Picture | `[style] mode`, `always`, `never` |
-| Tonality | Shuffle among all | Picture | `[tonality] mode`, `always`, `never` |
+| Tonality | Shuffle among all | Picture | `[tonality] mode` (shuffle, season, always), `always`, `never`, `hemisphere` |
 | Vignette | On, 1 | Effects | `[effects.vignette]` |
 | Grain | On, 0.035 | Effects | `[effects.grain]` |
 | Dither, halftone, glass, bloom, light leak, paper, posterize | Off | Effects | `[effects.<name>]` |
