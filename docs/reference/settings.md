@@ -25,4 +25,4 @@ Everything is set from the menu or **Settings…**, and applies straight away.
 
 The settings are stored as JSON in Undertone's defaults (`io.github.mpdreamz.undertone`, key `settings`), with the
 picture showing now (`pick`) and the time of the last shuffle (`lastShuffle`). `defaults delete
-io.github.mpdreamz.undertone` while Undertone is not running resets everything.
+io.github.mpdreamz.undertone` while Undertone is not running starts over from the defaults.

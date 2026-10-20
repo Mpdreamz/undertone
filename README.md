@@ -1,11 +1,12 @@
 # Undertone
 
-A macOS menu bar app that draws your desktop picture: soft gradients and shapes in a tonality that follows light or
-dark mode, a different one per space if you like, and puts it back when something else resets it.
+A macOS menu bar app that hides the notch and the screen's borders in black, under beautiful generated backgrounds
+that follow your light or dark theme and change on a schedule.
 
+- Hide the notch with a black menu bar strip and round the corners below it, so windows tiled into a corner meet black.
 - Eleven styles (mesh, flow, waves, orbs, rings, dunes, contour, silk, aurora, bauhaus, blobs) and eight tonalities
   (ember, tide, aurora, dusk, moss, glacier, citrus, mono); lock either or let it pick.
-- Hide the notch with a black menu bar strip, round the corners below it, add grain, or a centred title.
+- A new picture every hour, 3 hours or day, on login and wake, or from a hotkey; a picture per space; grain; a title.
 - Updates itself.
 
 **[mpdreamz.github.io/undertone](https://mpdreamz.github.io/undertone/)** has the docs and every style and tonality.

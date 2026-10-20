@@ -1,8 +1,7 @@
 # Plan
 
-Undertone draws the desktop picture itself and puts it back when something else changes it. It started on a
-company-managed Mac whose wallpaper keeps resetting to the default; what it draws is a gradient or a set of shapes in a
-tonality that follows the system's light or dark appearance.
+Undertone hides the notch and the screen's corners in black and draws the desktop picture itself: a gradient or a set
+of shapes in a tonality that follows the system's light or dark appearance, changed on a schedule, and kept set.
 
 ## Milestones
 
@@ -48,5 +47,3 @@ Tonalities, each with a dark and a light set of five colours (base, deep, two ac
   `desktopImageURL(for:)` reads it back. There is no public call for another space.
 - `NSWorkspace.activeSpaceDidChangeNotification`, `didWakeNotification`, `NSApplication.didChangeScreenParameters`,
   and `effectiveAppearance` (KVO) are the moments to look again.
-- A management profile with a locked desktop picture (`com.apple.desktop` payload, `override-picture-path`) cannot be
-  beaten by any app; one that only resets the picture now and then can.

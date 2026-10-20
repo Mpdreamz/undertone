@@ -6,7 +6,7 @@ cask "undertone" do
 
   url "https://github.com/mpdreamz/undertone/releases/download/v#{version}/Undertone-arm64.zip"
   name "Undertone"
-  desc "Generated gradient wallpapers that put themselves back"
+  desc "Hide the notch under generated wallpapers that follow your theme"
   homepage "https://github.com/mpdreamz/undertone"
 
   livecheck do

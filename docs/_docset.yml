@@ -25,10 +25,9 @@ toc:
   - folder: desktop
     children:
       - file: index.md
-      - file: spaces.md
       - file: notch-and-corners.md
+      - file: spaces.md
       - file: grain-and-title.md
-      - file: keeping-it-set.md
   - folder: reference
     children:
       - file: index.md

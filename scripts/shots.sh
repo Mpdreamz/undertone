@@ -47,7 +47,7 @@ done
 
 # The picture social sites show for a link.
 $render --style aurora --tonality aurora --appearance dark --seed 19 --grain 0.04 --size 1280x640 --scale 1 \
-  --title Undertone --subtitle "Wallpapers that put themselves back" -o docs/images/social.jpg
+  --title Undertone --subtitle "Hide the notch. Keep the colour." -o docs/images/social.jpg
 
 UNDERTONE_SHOTS="$root/docs/images" "$app/Contents/MacOS/Undertone"
 du -sh docs/images | sed 's/^/shots: /'

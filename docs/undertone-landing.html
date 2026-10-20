@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <base href="/undertone/">
-<title>Undertone · Wallpapers that put themselves back</title>
-<meta name="description" content="Undertone draws your Mac's desktop picture, in a tonality that follows light and dark mode, and puts it back within seconds when something else resets it.">
+<title>Undertone · Hide the notch, in beautiful generated backgrounds</title>
+<meta name="description" content="Undertone hides your Mac's notch and screen borders in black, under beautiful generated backgrounds that follow your light or dark theme and change on a schedule.">
 <meta property="og:title" content="Undertone">
-<meta property="og:description" content="Wallpapers that put themselves back. A small macOS menu bar app.">
+<meta property="og:description" content="Hide the notch and the borders, in beautiful generated backgrounds that follow your theme. A small macOS menu bar app.">
 <meta property="og:image" content="https://mpdreamz.github.io/undertone/images/social.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="images/png/undertone-32.png">
@@ -167,10 +167,10 @@
   <div class="wrap">
     <a class="brand" href="#top" aria-label="Undertone"><img src="images/png/undertone-64.png" alt="">Undertone</a>
     <div class="links">
-      <a class="l" href="#styles">Styles</a>
-      <a class="l" href="#tonalities">Tonalities</a>
-      <a class="l" href="#back">Puts itself back</a>
       <a class="l" href="#notch">Notch</a>
+      <a class="l" href="#styles">Styles</a>
+      <a class="l" href="#tonalities">Theme</a>
+      <a class="l" href="#schedule">Schedule</a>
       <a class="l" href="#faq">FAQ</a>
       <a class="l" href="getting-started/">Docs</a>
       <a class="btn" href="https://github.com/mpdreamz/undertone">GitHub</a>
@@ -181,10 +181,9 @@
 <header class="hero" id="top">
   <div class="wrap">
     <div class="eyebrow">A macOS menu bar app</div>
-    <h1>Wallpapers that <em>put themselves back.</em></h1>
-    <p class="lede">Undertone draws your desktop picture: soft gradients and shapes in a tonality that follows light and
-      dark mode, a different one on every space if you like. When something else resets it, Undertone puts its own
-      back within seconds.</p>
+    <h1>Hide the notch. <em>Keep the colour.</em></h1>
+    <p class="lede">Undertone hides the notch and the screen's borders in black, and fills the rest with beautiful
+      generated backgrounds: gradients and shapes that follow your light or dark theme and change on a schedule.</p>
     <div class="ctas">
       <a class="btn p" href="https://github.com/mpdreamz/undertone/releases/latest/download/Undertone-arm64.zip">Download for Mac</a>
       <a class="btn" href="getting-started/">Docs</a>
@@ -195,6 +194,32 @@
     <img class="shot" src="images/shots/landing/hero.jpg" alt="A MacBook showing Undertone's aurora style, the notch hidden in a black menu bar, rounded corners below it." width="2346" height="1551">
   </div>
 </header>
+
+<section id="notch">
+  <div class="wrap feat">
+    <div class="copyblock">
+      <div class="eyebrow">Notch and borders</div>
+      <h2>The notch, gone. The corners, black.</h2>
+      <p class="sub">A black strip as tall as the menu bar swallows the notch, so the menu bar reads as bezel and the
+        screen starts below it. Rounded corners put black behind every window tiled into a corner, so the picture
+        never peeks out round an app's own rounded corner.</p>
+      <ul>
+        <li>The strip is drawn only on displays with a notch.</li>
+        <li>The corner radius matches a macOS 26 window, and has a slider.</li>
+      </ul>
+    </div>
+    <div class="stack">
+      <div class="pair">
+        <figure><img src="images/shots/overlays/notch-off.jpg" alt="The notch over a light picture" loading="lazy"><figcaption>Notch · off</figcaption></figure>
+        <figure><img src="images/shots/overlays/notch-on.jpg" alt="The notch inside a black menu bar strip" loading="lazy"><figcaption>Notch · hidden</figcaption></figure>
+      </div>
+      <div class="pair">
+        <figure><img src="images/shots/overlays/corners-off.jpg" alt="Picture showing behind a window's rounded corner" loading="lazy"><figcaption>Corners · off</figcaption></figure>
+        <figure><img src="images/shots/overlays/corners-on.jpg" alt="Black behind a window's rounded corner" loading="lazy"><figcaption>Corners · rounded</figcaption></figure>
+      </div>
+    </div>
+  </div>
+</section>
 
 <section id="styles">
   <div class="wrap center">
@@ -225,8 +250,8 @@
 
 <section id="tonalities">
   <div class="wrap center">
-    <div class="eyebrow">Eight tonalities</div>
-    <h2>Seeded by light and dark.</h2>
+    <div class="eyebrow">Follows your theme</div>
+    <h2>Light mode, dark mode, eight tonalities.</h2>
     <p class="sub">Each tonality has a dark half and a light half. Switch appearance and the picture switches with it:
       the same shapes, the other colours. Lock a tonality, or let it change on every shuffle, independently of the
       style.</p>
@@ -248,28 +273,27 @@
   </div>
 </section>
 
-<section id="back">
+<section id="schedule">
   <div class="wrap feat">
     <div class="copyblock">
-      <div class="eyebrow">Puts itself back</div>
-      <h2>Your managed Mac reset the wallpaper again.</h2>
-      <p class="sub">Undertone was made for a company Mac whose desktop picture kept going back to the default. It
-        watches for that and sets its own again, usually before you notice.</p>
+      <div class="eyebrow">On a schedule</div>
+      <h2>A new background every day. Or hour.</h2>
+      <p class="sub">Shuffle by hand, from a hotkey, or let Undertone pick a new picture every hour, every three hours or
+        every day, and on login and wake. Style and tonality are separate choices: lock either, and only the other
+        one changes.</p>
       <ul>
-        <li><b>No permissions.</b> Setting the desktop picture is something any app may do.</li>
-        <li><b>Drawn once.</b> Each picture is drawn on your Mac at the display's full resolution and reused; a check
-          costs next to nothing.</li>
-        <li><b>Pause</b> when you want the desktop left alone.</li>
+        <li><b>Theme switch:</b> the same picture, redrawn from the other half of its tonality.</li>
+        <li><b>Drawn on your Mac</b> at each display's full resolution, once, then reused.</li>
+        <li><b>No permissions</b> to grant.</li>
       </ul>
     </div>
-    <div>
-      <div class="stamp">~4 s<small>from a reset to the default picture to Undertone's own, measured on a Mac.</small></div>
-      <div class="checks" style="margin-top:28px">
-        <div class="check"><b>Space switch, wake, displays</b><span>Every moment a picture could have changed.</span></div>
-        <div class="check"><b>The wallpaper store</b><span>A write to macOS's own record of the pictures.</span></div>
-        <div class="check"><b>Light and dark</b><span>The other half of the tonality, drawn and set.</span></div>
-        <div class="check"><b>Every 30 seconds</b><span>Whatever else happened.</span></div>
-      </div>
+    <div class="checks">
+      <div class="check"><b>Random style, random tonality</b><span>Something new every time.</span></div>
+      <div class="check"><b>Locked style</b><span>The same kind of picture in new colours.</span></div>
+      <div class="check"><b>Locked tonality</b><span>New shapes in colours you chose.</span></div>
+      <div class="check"><b>Both locked</b><span>The same look, laid out anew.</span></div>
+      <div class="check"><b>Every hour, 3 hours or day</b><span>Counted across sleep and restarts.</span></div>
+      <div class="check"><b><code>undertone shuffle</code></b><span>For a hotkey, a Shortcut or a script.</span></div>
     </div>
   </div>
 </section>
@@ -290,31 +314,6 @@
   </div>
 </section>
 
-<section id="notch">
-  <div class="wrap feat rev">
-    <div class="copyblock">
-      <div class="eyebrow">Notch and corners</div>
-      <h2>Hide the notch. Round the corners.</h2>
-      <p class="sub">A black strip as tall as the menu bar swallows the notch, and the menu bar reads as bezel. Rounded
-        corners below it put black behind a window tiled flush into a corner, so its own rounded corner meets black
-        instead of a sliver of picture.</p>
-      <ul>
-        <li>The strip is drawn only on displays with a notch.</li>
-        <li>The corner radius matches a macOS 26 window, and has a slider.</li>
-      </ul>
-    </div>
-    <div class="stack">
-      <div class="pair">
-        <figure><img src="images/shots/overlays/notch-off.jpg" alt="The notch over a light picture" loading="lazy"><figcaption>Notch · off</figcaption></figure>
-        <figure><img src="images/shots/overlays/notch-on.jpg" alt="The notch inside a black menu bar strip" loading="lazy"><figcaption>Notch · hidden</figcaption></figure>
-      </div>
-      <div class="pair">
-        <figure><img src="images/shots/overlays/corners-off.jpg" alt="Picture showing behind a window's rounded corner" loading="lazy"><figcaption>Corners · off</figcaption></figure>
-        <figure><img src="images/shots/overlays/corners-on.jpg" alt="Black behind a window's rounded corner" loading="lazy"><figcaption>Corners · rounded</figcaption></figure>
-      </div>
-    </div>
-  </div>
-</section>
 
 <section id="title">
   <div class="wrap feat">
@@ -357,10 +356,9 @@
     <div class="faq">
       <details><summary>Does it need any permissions?</summary>
         <p>No. Setting the desktop picture needs none, and Undertone asks for nothing else.</p></details>
-      <details><summary>Can it beat a profile that locks the wallpaper?</summary>
-        <p>No app can: a configuration profile that locks the desktop picture makes macOS refuse every change.
-          Undertone undoes anything that only <em>sets</em> the picture, which is what most resets are.
-          <a href="desktop/keeping-it-set/">How to tell which you have.</a></p></details>
+      <details><summary>Does it follow dark mode on its own?</summary>
+        <p>Yes. When the system switches between light and dark, including on a schedule, Undertone redraws the same
+          picture from the other half of its tonality.</p></details>
       <details><summary>Does it cost battery?</summary>
         <p>A picture is drawn once, in about half a second, when you shuffle or change a setting, and reused after that.
           The checks compare a file name.</p></details>
@@ -374,7 +372,7 @@
 
 <div class="end">
   <div class="wrap">
-    <h2>Your desktop, kept.</h2>
+    <h2>No notch. All colour.</h2>
     <div class="ctas" style="margin-top:28px">
       <a class="btn p" href="https://github.com/mpdreamz/undertone/releases/latest/download/Undertone-arm64.zip">Download for Mac</a>
       <a class="btn" href="getting-started/">Docs</a>

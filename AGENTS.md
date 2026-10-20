@@ -1,7 +1,7 @@
 # Agents working on Undertone
 
 Undertone is a menu bar app that draws the desktop picture (gradients and shapes in a tonality that follows light or
-dark mode) and puts it back when something else replaces it. Read `PLAN.md` first.
+dark mode), hides the notch and the screen's corners in black, and keeps its picture set. Read `PLAN.md` first.
 
 ## Principles
 
