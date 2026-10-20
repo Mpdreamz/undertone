@@ -19,6 +19,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         // A new version of the app brings a new screen saver.
         if desktop.settings.lockScreenMotion { MotionStudio.installSaver() }
         Updater.shared.start()
+        LaunchAtLogin.turnOnForNewInstall()
     }
 
     /// Built each time it opens, so the check marks say how things are now. Quick toggles and commands only;

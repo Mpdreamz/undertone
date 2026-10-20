@@ -25,8 +25,10 @@ Or download [`Undertone-arm64.zip`](https://github.com/mpdreamz/undertone/releas
 unzip it, and move `Undertone.app` to Applications. Releases are signed with a Developer ID and notarized by Apple, so
 it opens without a warning.
 
-Open it once: a half-filled circle appears in the menu bar, and the desktop changes. **Open at Login** in its menu
-keeps it running from then on, which is what keeps the picture set.
+Open it once: a half-filled circle appears in the menu bar, and the desktop changes. Undertone also adds itself to
+your login items that first time (macOS says so in a notification), since it keeps the picture set only while it
+runs. Turn **Open at login** off on the **General** page of **Settings…**, or in System Settings › General › Login
+Items, and it stays off.
 
 ## From source
 

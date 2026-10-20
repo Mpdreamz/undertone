@@ -13,6 +13,9 @@ guard SingleInstance.acquire() else {
     exit(0)
 }
 
+// Whether this is a new install, before Undertone writes anything of its own.
+_ = MainActor.assumeIsolated { LaunchAtLogin.isFirstRun }
+
 // A menu bar app (LSUIElement): no Dock icon and no windows of its own, only the status item.
 let app = NSApplication.shared
 let delegate = AppDelegate()

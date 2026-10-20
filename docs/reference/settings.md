@@ -24,7 +24,7 @@ and a subtle grain.
 | Title | Off; `{computer}` over `{user} · macOS {os}` | Title | `[title] show`, `title`, `subtitle` |
 | Lock screen motion | Off | Lock Screen Motion | `[motion] lock_screen` |
 | Motion speed, movement, settle, easing | Normal, normal, 2.5 s, ease out | Lock Screen Motion | `[motion] speed`, `movement`, `settle`, `easing` |
-| Open at login | Off | General | not in the file |
+| Open at login | On (turned on once, when Undertone first runs) | General | not in the file |
 | Pause | Off | the menu | not in the file |
 
 What is showing now, the time of the last shuffle and **Pause** live in Undertone's own preferences

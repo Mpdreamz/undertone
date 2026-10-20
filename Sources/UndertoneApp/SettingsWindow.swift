@@ -637,6 +637,9 @@ private struct GeneralPage: View {
             Section {
                 Toggle("Open at login", isOn: $openAtLogin)
                     .onChange(of: openAtLogin) { _, on in LaunchAtLogin.set(on) }
+            } footer: {
+                Text("On from the first run, since Undertone keeps your picture set only while it runs. Off stays off.")
+                    .foregroundStyle(.secondary)
             }
             Section {
                 Toggle("Check for updates automatically", isOn: $checks)
