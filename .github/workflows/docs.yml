@@ -40,6 +40,7 @@ jobs:
           cp docs/robots.txt .artifacts/docs/html/robots.txt
           cp install.sh .artifacts/docs/html/install.sh
           cp docs/images/shots/styles/shuffles/shuffles.json .artifacts/docs/html/images/shots/styles/shuffles/
+          cp docs/images/shots/landing/motion.mp4 .artifacts/docs/html/images/shots/landing/
 
       - name: Setup Pages
         uses: actions/configure-pages@v6.0.0

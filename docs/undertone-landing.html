@@ -103,6 +103,7 @@
   .feat li { margin: 6px 0; }
   .feat li b { color: var(--text); font-weight: 600; }
   .frame { border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: var(--bg2); }
+  .frame video { display: block; width: 100%; height: auto; aspect-ratio: 960 / 624; }
 
   .toggle { display: inline-flex; margin-top: 26px; border: 1px solid var(--line); border-radius: 999px; padding: 4px;
     background: rgba(0,0,0,0.3); }
@@ -173,6 +174,7 @@
     <a class="brand" href="#top" aria-label="Undertone"><img src="images/png/undertone-64.png" alt="">Undertone</a>
     <div class="links">
       <a class="l" href="#notch">Notch</a>
+      <a class="l" href="#motion">Motion</a>
       <a class="l" href="#styles">Styles</a>
       <a class="l" href="#tonalities">Theme</a>
       <a class="l" href="#effects">Effects</a>
@@ -224,6 +226,23 @@
         <figure><img src="images/shots/overlays/corners-on.jpg" alt="Black behind a window's rounded corner" loading="lazy"><figcaption>Corners · rounded</figcaption></figure>
       </div>
     </div>
+  </div>
+</section>
+
+<section id="motion">
+  <div class="wrap feat rev">
+    <div class="copyblock">
+      <div class="eyebrow">Lock screen motion</div>
+      <h2>It moves while you're away.</h2>
+      <p class="sub">While the Mac is locked, your picture drifts: the curtains sway, the waves roll, the glows wander.
+        Unlock, and it slows to a stop on your desktop.</p>
+      <ul>
+        <li><b>Your picture,</b> in its own style, tonality and layout, not a stock video.</li>
+        <li><b>Drawn in the background</b> after each shuffle, played by the Mac's video hardware.</li>
+        <li><b>One switch</b> in the menu, and Undertone as your screen saver.</li>
+      </ul>
+    </div>
+    <div class="frame"><video src="images/shots/landing/motion.mp4" poster="images/shots/styles/aurora-dark.jpg" autoplay muted loop playsinline aria-label="An aurora picture drifting on a loop"></video></div>
   </div>
 </section>
 

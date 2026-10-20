@@ -58,6 +58,7 @@ final class Desktop {
         appearanceObservation = NSApp.observe(\.effectiveAppearance) { _, _ in
             Task { @MainActor in self.apply() }
         }
+        MotionStudio.shared.start()
         watchWallpaperStore()
         // The backstop: whatever reset the picture without any of the above noticing is caught within half a minute.
         timers.append(Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { _ in
@@ -113,6 +114,7 @@ final class Desktop {
         guard !settings.paused else { return }
         for screen in NSScreen.screens {
             let target = target(for: screen)
+            if settings.lockScreenMotion { MotionStudio.shared.want(target, display: Spaces.displayUUID(screen)) }
             let url = folder.appendingPathComponent(target.name)
             if FileManager.default.fileExists(atPath: url.path) {
                 set(url, on: screen)
@@ -122,7 +124,7 @@ final class Desktop {
         }
     }
 
-    private struct Target {
+    struct Target: Sendable {
         let recipe: Recipe
         let overlay: Overlay
         let width: Int

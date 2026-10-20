@@ -29,6 +29,7 @@ toc:
       - file: notch-and-corners.md
       - file: spaces.md
       - file: grain-and-title.md
+      - file: lock-screen.md
   - folder: reference
     children:
       - file: index.md

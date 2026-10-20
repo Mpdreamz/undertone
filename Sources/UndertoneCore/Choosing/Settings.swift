@@ -55,6 +55,8 @@ public struct Settings: Hashable, Codable, Sendable {
     public var showText = false
     public var title = "{computer}"
     public var subtitle = "{user} · macOS {os}"
+    /// Render each display's picture in motion for Undertone's screen saver, and settle it on unlock.
+    public var lockScreenMotion = false
     /// Leave the desktop picture alone: nothing is set or put back.
     public var paused = false
 
@@ -77,5 +79,6 @@ public struct Settings: Hashable, Codable, Sendable {
         title = (try? c.decode(String.self, forKey: .title)) ?? d.title
         subtitle = (try? c.decode(String.self, forKey: .subtitle)) ?? d.subtitle
         paused = (try? c.decode(Bool.self, forKey: .paused)) ?? d.paused
+        lockScreenMotion = (try? c.decode(Bool.self, forKey: .lockScreenMotion)) ?? d.lockScreenMotion
     }
 }

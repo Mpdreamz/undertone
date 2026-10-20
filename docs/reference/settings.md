@@ -21,6 +21,7 @@ Everything is set from the menu or **Settings…**, and applies straight away.
 | Show a title | Off | Menu, Settings | |
 | Title | `{computer}` | Settings | See [A title](../desktop/grain-and-title.md#a-title). |
 | Subtitle | `{user} · macOS {os}` | Settings | |
+| Lock screen motion | Off | Menu | Needs Undertone chosen as the screen saver. |
 | Pause | Off | Menu | Leave the desktop alone. |
 | Open at login | Off | Menu | A login item. |
 

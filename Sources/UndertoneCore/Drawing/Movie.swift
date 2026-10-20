@@ -41,8 +41,9 @@ public enum Movie {
     /// Draws every moment of `motions` and writes them to `url` (an .mp4 or .mov) at `fps`. `progress` hears the
     /// number of frames written.
     public static func write(
-        _ recipe: Recipe, width: Int, height: Int, scale: Float, motions: [Motion], fps: Int, codec: Codec = .hevc,
-        to url: URL, progress: (Int) -> Void = { _ in }
+        _ recipe: Recipe, width: Int, height: Int, scale: Float, overlay: Overlay = Overlay(), motions: [Motion],
+        fps: Int, codec: Codec = .hevc, threads: Int? = nil, to url: URL, progress: (Int) -> Void = { _ in },
+        cancelled: () -> Bool = { false }
     ) throws {
         try? FileManager.default.removeItem(at: url)
         let type: AVFileType = url.pathExtension.lowercased() == "mov" ? .mov : .mp4
@@ -72,7 +73,17 @@ public enum Movie {
         writer.startSession(atSourceTime: .zero)
 
         for (index, motion) in motions.enumerated() {
-            let picture = Renderer.render(recipe, width: width, height: height, scale: scale, motion: motion)
+            if cancelled() {
+                writer.cancelWriting()
+                throw Failure(description: "cancelled")
+            }
+            var picture = Renderer.render(
+                recipe, width: width, height: height, scale: scale, motion: motion, threads: threads
+            )
+            // The desktop's own notch strip, corners and title, so the last frame is the desktop picture.
+            if !overlay.isEmpty, let image = Composer.compose(picture, overlay, appearance: recipe.appearance) {
+                picture = Picture(image) ?? picture
+            }
             guard let pool = adaptor.pixelBufferPool else { throw Failure(description: "no pixel buffers") }
             var buffer: CVPixelBuffer?
             CVPixelBufferPoolCreatePixelBuffer(nil, pool, &buffer)
