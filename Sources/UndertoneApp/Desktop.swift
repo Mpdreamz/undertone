@@ -144,7 +144,7 @@ final class Desktop {
         var overlay = Overlay(scale: scale)
         let notch = screen.safeAreaInsets.top
         if settings.hideNotch, notch > 0 { overlay.strip = Int((notch * screen.backingScaleFactor).rounded()) }
-        if settings.roundCorners { overlay.cornerRadius = Int((settings.cornerRadius * scale).rounded()) }
+        if settings.roundCorners { overlay.cornerRadius = Int((Overlay.windowCorner * scale).rounded()) }
         if settings.showText {
             overlay.title = Placeholders.expand(settings.title, Self.placeholders)
             overlay.subtitle = Placeholders.expand(settings.subtitle, Self.placeholders)

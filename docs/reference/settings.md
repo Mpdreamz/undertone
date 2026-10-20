@@ -17,7 +17,6 @@ Everything is set from the menu or **Settings…**, and applies straight away.
 | Grain | Subtle (0.035) | Menu, Settings | 0 to 0.08; the menu offers none, subtle and strong (0.06). |
 | Hide the notch | Off | Menu, Settings | Displays with a notch only. |
 | Round corners | Off | Menu, Settings | |
-| Corner radius | 16 pt | Settings | 4 to 32. |
 | Show a title | Off | Menu, Settings | |
 | Title | `{computer}` | Settings | See [A title](../desktop/grain-and-title.md#a-title). |
 | Subtitle | `{user} · macOS {os}` | Settings | |

@@ -156,6 +156,24 @@ struct ComposerTests {
         #expect(Self.pixel(image, 100, 60) != [0, 0, 0])
     }
 
+    @Test func continuousCornersCurveFurtherAlongTheEdgesThanACircle() {
+        let rect = CGRect(x: 0, y: 0, width: 400, height: 300)
+        let path = ContinuousCorners.path(rect, radius: 20)
+        #expect(path.boundingBox.equalTo(rect))
+        #expect(path.contains(CGPoint(x: 200, y: 150)))
+        for corner in [CGPoint(x: 1, y: 1), CGPoint(x: 399, y: 1), CGPoint(x: 1, y: 299), CGPoint(x: 399, y: 299)] {
+            #expect(!path.contains(corner), "the corner \(corner) is cut away")
+        }
+        // A circle of radius 20 is back on the edge at x = 20; the continuous curve is still 0.14 off it there, and
+        // meets it only at x = 30.6.
+        #expect(!path.contains(CGPoint(x: 21, y: 0.1)))
+        #expect(path.contains(CGPoint(x: 21, y: 0.2)))
+        #expect(path.contains(CGPoint(x: 31, y: 0.01)))
+        // A radius too big for the rectangle shrinks instead of folding over itself.
+        #expect(ContinuousCorners.path(CGRect(x: 0, y: 0, width: 20, height: 20), radius: 50).boundingBox
+            .width <= 20.001)
+    }
+
     @Test func aTitleIsDrawnInTheMiddle() throws {
         let plain = try #require(Composer.compose(Self.picture, Overlay(strip: 1), appearance: .light))
         let titled = try #require(Composer.compose(

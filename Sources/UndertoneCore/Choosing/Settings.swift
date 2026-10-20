@@ -84,8 +84,6 @@ public struct Settings: Hashable, Codable, Sendable {
     public var hideNotch = false
     /// Black outside a rounded rectangle (below the strip, if there is one), so windows' corners meet black.
     public var roundCorners = false
-    /// In points: 16 is a macOS 26 window's own corner, so a window tiled into a corner shows no picture behind it.
-    public var cornerRadius: Float = 16
     public var showText = false
     public var title = "{computer}"
     public var subtitle = "{user} · macOS {os}"
@@ -113,7 +111,6 @@ public struct Settings: Hashable, Codable, Sendable {
         grain = (try? c.decode(Float.self, forKey: .grain)) ?? d.grain
         hideNotch = (try? c.decode(Bool.self, forKey: .hideNotch)) ?? d.hideNotch
         roundCorners = (try? c.decode(Bool.self, forKey: .roundCorners)) ?? d.roundCorners
-        cornerRadius = (try? c.decode(Float.self, forKey: .cornerRadius)) ?? d.cornerRadius
         showText = (try? c.decode(Bool.self, forKey: .showText)) ?? d.showText
         title = (try? c.decode(String.self, forKey: .title)) ?? d.title
         subtitle = (try? c.decode(String.self, forKey: .subtitle)) ?? d.subtitle
