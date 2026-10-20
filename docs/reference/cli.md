@@ -1,0 +1,48 @@
+---
+description: The undertone command.
+---
+
+# Command line
+
+Homebrew links `undertone` onto your `PATH`; it is also at `Undertone.app/Contents/Helpers/undertone`. It starts in
+milliseconds and needs no permission.
+
+## undertone shuffle
+
+A new picture now, as **Shuffle** in the menu. Undertone must be running. For a hotkey, with skhd:
+
+```
+lcmd + alt - w : undertone shuffle
+```
+
+## undertone render
+
+Draws one picture to a file, without the app and without touching the desktop:
+
+```sh
+undertone render --style silk --tonality dusk --appearance light --seed 9 -o silk.png
+```
+
+| Option | Default | |
+|---|---|---|
+| `--style` | `mesh` | See `undertone styles`. |
+| `--tonality` | `ember` | See `undertone tonalities`. |
+| `--appearance` | `dark` | `dark` or `light`. |
+| `--seed` | `1` | Any whole number; the same seed draws the same picture. |
+| `--grain` | `0.035` | `0` for none. |
+| `--size` | `3024x1964` | In pixels (a 14-inch MacBook Pro). |
+| `--scale` | `2` | Pixels to a point: grain, lines and text follow points. |
+| `--strip` | `0` | A black strip across the top, in points (37 is a notched MacBook's menu bar). |
+| `--corners` | `0` | Rounded corners below the strip, in points. |
+| `--title`, `--subtitle` | none | Centred text. |
+| `-o` | required | The file; `.jpg` writes a JPEG, anything else a PNG. |
+
+Every image in these docs was drawn this way, or by the app from the same renderer.
+
+## undertone styles, undertone tonalities
+
+List the names `render` takes, styles with a line on each.
+
+## undertone --version
+
+The version, build number and commit of the app it belongs to.

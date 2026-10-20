@@ -6,7 +6,7 @@ import UndertoneCore
 let usage = """
 usage: undertone render [--style S] [--tonality T] [--appearance dark|light] [--seed N] [--grain G]
                         [--size WxH] [--scale K] [--strip PT] [--corners PT] [--title T] [--subtitle T]
-                        -o <file.png>
+                        -o <file.png|file.jpg>
        undertone shuffle
        undertone styles
        undertone tonalities
@@ -15,8 +15,8 @@ usage: undertone render [--style S] [--tonality T] [--appearance dark|light] [--
   shuffle
       A new picture now, in Undertone.app (which must be running), as the menu's Shuffle.
   render
-      Draw one picture to a PNG, without the app: --size is in pixels (default 3024x1964, a 14" MacBook Pro),
-      --scale the pixels to a point (default 2). Defaults: mesh, ember, dark, seed 1, grain 0.035.
+      Draw one picture to a PNG (a JPEG when the file ends in .jpg), without the app. --size is in pixels
+      (default 3024x1964, a 14" MacBook Pro), --scale the pixels to a point (default 2). Defaults: mesh, ember, dark, seed 1, grain 0.035.
       --strip draws the black notch strip that tall, --corners rounds the corners below it, both in points.
 """
 
@@ -66,10 +66,11 @@ func render(_ arguments: ArraySlice<String>) {
         strip: Int((strip * scale).rounded()), cornerRadius: Int((corners * scale).rounded()),
         title: title, subtitle: subtitle, scale: scale
     )
+    let jpeg = [".jpg", ".jpeg"].contains { output.lowercased().hasSuffix($0) }
     guard let image = Composer.compose(picture, overlay, appearance: recipe.appearance),
-          let png = Composer.png(image)
-    else { fail("could not encode the PNG") }
-    do { try png.write(to: URL(fileURLWithPath: output)) } catch { fail("could not write \(output): \(error)") }
+          let data = jpeg ? Composer.jpeg(image) : Composer.png(image)
+    else { fail("could not encode the picture") }
+    do { try data.write(to: URL(fileURLWithPath: output)) } catch { fail("could not write \(output): \(error)") }
 }
 
 let arguments = Array(CommandLine.arguments.dropFirst())

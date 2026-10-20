@@ -1,0 +1,39 @@
+project: 'Undertone'
+max_toc_depth: 2
+dev_docs: true
+
+branding:
+  icon: images/png/undertone-64.png
+  favicon: images/png/undertone-32.png
+  og-image: images/social.jpg
+  apple-touch-icon: images/png/undertone-180.png
+
+# Every image under images is drawn by Undertone: `mise run shots` (scripts/shots.sh) renders them from fixed recipes.
+toc:
+  - file: index.md
+  - folder: getting-started
+    children:
+      - file: index.md
+      - file: installation.md
+      - file: the-menu.md
+  - folder: pictures
+    children:
+      - file: index.md
+      - file: styles.md
+      - file: tonalities.md
+      - file: shuffling.md
+  - folder: desktop
+    children:
+      - file: index.md
+      - file: spaces.md
+      - file: notch-and-corners.md
+      - file: grain-and-title.md
+      - file: keeping-it-set.md
+  - folder: reference
+    children:
+      - file: index.md
+      - file: settings.md
+      - file: cli.md
+      - file: files.md
+      - file: updates.md
+  - file: troubleshooting.md
