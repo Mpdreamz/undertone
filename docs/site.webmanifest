@@ -1,0 +1,14 @@
+{
+  "name": "Undertone",
+  "short_name": "Undertone",
+  "description": "Generated wallpapers for your Mac that follow your theme, change on a schedule and hide the notch.",
+  "start_url": "/undertone/",
+  "scope": "/undertone/",
+  "display": "browser",
+  "background_color": "#08090B",
+  "theme_color": "#08090B",
+  "icons": [
+    { "src": "/undertone/images/png/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/undertone/images/png/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

@@ -14,6 +14,8 @@ enum Shots {
             try settings(into: shots.appendingPathComponent("app"))
             try laptops(into: shots)
             try mark(into: folder.appendingPathComponent("png"))
+            try icon(into: folder)
+            try socialCards(into: folder)
         } catch {
             FileHandle.standardError.write(Data("shots: \(error)\n".utf8))
             exit(1)
@@ -138,7 +140,7 @@ enum Shots {
     /// The picture as the screen shows it, a menu bar over it, the notch, optionally a window and the laptop's bezel.
     private static func laptop(
         _ recipe: Recipe, notch: Bool, corners: Bool, title: (String, String)? = nil, window: Bool = false,
-        bezel: Bool = true
+        bezel: Bool = true, background: Bool = true
     ) throws -> CGImage {
         let width = Int(screen.width * scale), height = Int(screen.height * scale)
         let picture = Renderer.render(recipe, width: width, height: height, scale: Float(scale))
@@ -157,8 +159,10 @@ enum Shots {
             let context = NSGraphicsContext.current!.cgContext
             if bezel {
                 // The landing page's background, so the bezel's rounded corners sit on it (a JPEG has no alpha).
-                NSColor(red: 8 / 255, green: 9 / 255, blue: 11 / 255, alpha: 1).setFill()
-                NSRect(origin: .zero, size: size).fill()
+                if background {
+                    NSColor(red: 8 / 255, green: 9 / 255, blue: 11 / 255, alpha: 1).setFill()
+                    NSRect(origin: .zero, size: size).fill()
+                }
                 NSColor(white: 0.07, alpha: 1).setFill()
                 NSBezierPath(roundedRect: NSRect(origin: .zero, size: size), xRadius: 34, yRadius: 34).fill()
             }
@@ -314,6 +318,149 @@ enum Shots {
             guard let image = context.makeImage() else { throw Failure(description: "no mark") }
             try write(image, to: folder.appendingPathComponent("undertone-\(size).png"))
         }
+    }
+
+    // MARK: The app icon
+
+    /// The app's icon: the mark's two halves, light and dark, filling macOS's icon shape (a continuous rounded square
+    /// on the standard grid, 824 of 1024 with a soft shadow), so macOS 26 shows it as is rather than in a frame.
+    static func iconImage(size: Int) throws -> CGImage {
+        let s = CGFloat(size)
+        let body = CGRect(x: s * 100 / 1024, y: s * 100 / 1024, width: s * 824 / 1024, height: s * 824 / 1024)
+        let recipe = Recipe(style: .mesh, tonality: .ember, appearance: .dark, seed: 3, effects: Effects(grain: nil))
+        let pixels = max(Int(body.width.rounded()), 8)
+        var light = recipe
+        light.appearance = .light
+        guard let dark = Renderer.render(recipe, width: pixels, height: pixels).cgImage(),
+              let bright = Renderer.render(light, width: pixels, height: pixels).cgImage(),
+              let context = CGContext(
+                  data: nil, width: size, height: size, bitsPerComponent: 8, bytesPerRow: 0,
+                  space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+              )
+        else { throw Failure(description: "no icon") }
+        let shape = ContinuousCorners.path(body, radius: body.width * 0.2253)
+        // The shadow macOS's own icons carry, under the shape.
+        if size >= 64 {
+            context.saveGState()
+            context.setShadow(
+                offset: CGSize(width: 0, height: -s * 10 / 1024), blur: s * 22 / 1024,
+                color: CGColor(gray: 0, alpha: 0.35)
+            )
+            context.addPath(shape)
+            context.setFillColor(CGColor(gray: 0, alpha: 1))
+            context.fillPath()
+            context.restoreGState()
+        }
+        context.saveGState()
+        context.addPath(shape)
+        context.clip()
+        context.draw(dark, in: body)
+        context.clip(to: CGRect(x: body.minX, y: body.minY, width: body.width / 2, height: body.height))
+        context.draw(bright, in: body)
+        context.restoreGState()
+        // A hairline of light along the edge, as on macOS's icons.
+        if size >= 64 {
+            context.addPath(shape)
+            context.setStrokeColor(CGColor(gray: 1, alpha: 0.18))
+            context.setLineWidth(max(s / 512, 1))
+            context.strokePath()
+        }
+        guard let image = context.makeImage() else { throw Failure(description: "no icon") }
+        return image
+    }
+
+    /// `icon/AppIcon.iconset` for iconutil (scripts/shots.sh turns it into Resources/AppIcon.icns), and the web's
+    /// icons in `png`.
+    private static func icon(into folder: URL) throws {
+        let iconset = folder.appendingPathComponent("icon/AppIcon.iconset")
+        for points in [16, 32, 128, 256, 512] {
+            try write(iconImage(size: points), to: iconset.appendingPathComponent("icon_\(points)x\(points).png"))
+            try write(
+                iconImage(size: points * 2), to: iconset.appendingPathComponent("icon_\(points)x\(points)@2x.png")
+            )
+        }
+        for size in [32, 180, 192, 512] {
+            try write(iconImage(size: size), to: folder.appendingPathComponent("png/icon-\(size).png"))
+        }
+    }
+
+    // MARK: Social cards
+
+    /// What a link to the site shows (Open Graph, 1200 × 630) and GitHub's social preview (1280 × 640): the mark and
+    /// the name, the tagline, and the laptop with the notch hidden, on a dark ember mesh.
+    private static func socialCards(into folder: URL) throws {
+        try jpeg(card(width: 1200, height: 630), to: folder.appendingPathComponent("social.jpg"))
+        try jpeg(card(width: 1280, height: 640), to: folder.appendingPathComponent("social-github.jpg"))
+    }
+
+    private static func card(width: Int, height: Int) throws -> CGImage {
+        let size = CGSize(width: width, height: height)
+        let k = CGFloat(width) / 1200
+        let backdrop = Renderer.render(
+            Recipe(
+                style: .mesh,
+                tonality: .ember,
+                appearance: .dark,
+                seed: 11,
+                effects: Effects(vignette: 1.4, grain: 0.03)
+            ),
+            width: width * 2, height: height * 2, scale: 2
+        )
+        guard let backdropImage = backdrop.cgImage() else { throw Failure(description: "no card backdrop") }
+        let laptopImage = try laptop(
+            Recipe(style: .aurora, tonality: .aurora, appearance: .dark, seed: 19, effects: Effects(grain: 0.04)),
+            notch: true, corners: true, background: false
+        )
+        let markImage = try iconImage(size: Int(128 * k * 2))
+        let image = NSImage(size: size, flipped: true) { _ in
+            let context = NSGraphicsContext.current!.cgContext
+            context.saveGState()
+            context.translateBy(x: 0, y: size.height)
+            context.scaleBy(x: 1, y: -1)
+            context.draw(backdropImage, in: CGRect(origin: .zero, size: size))
+            // The laptop, off the right edge, a little tilted into the light.
+            let laptopWidth = 760 * k
+            let laptopHeight = laptopWidth * CGFloat(laptopImage.height) / CGFloat(laptopImage.width)
+            context.setShadow(
+                offset: CGSize(width: 0, height: -18 * k),
+                blur: 60 * k,
+                color: CGColor(gray: 0, alpha: 0.6)
+            )
+            context.draw(laptopImage, in: CGRect(x: 560 * k, y: -40 * k, width: laptopWidth, height: laptopHeight))
+            context.restoreGState()
+
+            NSImage(cgImage: markImage, size: NSSize(width: 128 * k, height: 128 * k))
+                .draw(in: NSRect(x: 52 * k, y: 70 * k, width: 128 * k, height: 128 * k))
+            let title = NSAttributedString(string: "Undertone", attributes: [
+                .font: NSFont.systemFont(ofSize: 92 * k, weight: .bold),
+                .foregroundColor: NSColor(white: 0.96, alpha: 1),
+                .kern: -2.5 * k,
+            ])
+            title.draw(at: NSPoint(x: 70 * k, y: 220 * k))
+            let tagline = NSMutableParagraphStyle()
+            tagline.lineSpacing = 6 * k
+            let lines = NSAttributedString(
+                string: "Generated wallpapers for your Mac\nthat follow your theme, change on\na schedule and hide the notch.",
+                attributes: [
+                    .font: NSFont.systemFont(ofSize: 30 * k, weight: .medium),
+                    .foregroundColor: NSColor(white: 0.78, alpha: 1),
+                    .paragraphStyle: tagline,
+                ]
+            )
+            lines.draw(in: NSRect(x: 72 * k, y: 345 * k, width: 520 * k, height: 200 * k))
+            let footer = NSAttributedString(string: "mpdreamz.github.io/undertone", attributes: [
+                .font: NSFont.monospacedSystemFont(ofSize: 20 * k, weight: .medium),
+                .foregroundColor: NSColor(red: 1, green: 0.69, blue: 0.24, alpha: 1),
+            ])
+            footer.draw(at: NSPoint(x: 72 * k, y: 548 * k))
+            return true
+        }
+        var rect = CGRect(origin: .zero, size: size)
+        guard let cg = image.cgImage(
+            forProposedRect: &rect, context: nil, hints: [.ctm: NSAffineTransform(transform: .init(scale: 1))]
+        ) else { throw Failure(description: "no card") }
+        return cg
     }
 
     // MARK: Files
