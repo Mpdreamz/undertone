@@ -40,19 +40,24 @@ enum Preferences {
     static func readFile() -> Settings? {
         guard let text = try? String(contentsOf: resolvedConfigURL, encoding: .utf8) else { return nil }
         lastText = text
-        let (settings, warnings) = ConfigFile.parse(text)
-        self.warnings = warnings
+        let result = ConfigFile.parse(text)
+        warnings = result.warnings
         for warning in warnings {
             log.warning("\(configURL.path, privacy: .public) \(warning.description, privacy: .public)")
         }
-        return settings
+        // Undertone 0.4's layout: written again in today's, once.
+        if result.isOldLayout {
+            write(result.settings)
+            log.info("rewrote \(configURL.path, privacy: .public) in the new layout")
+        }
+        return result.settings
     }
 
     /// Settings kept in the defaults before the config file: moved into the file once.
     private static func migrated() -> Settings? {
-        guard let data = defaults.data(forKey: "settings"),
-              let settings = try? JSONDecoder().decode(Settings.self, from: data)
-        else { return nil }
+        guard let data = defaults.data(forKey: "settings"), let settings = Settings.fromLegacyJSON(data) else {
+            return nil
+        }
         write(settings)
         defaults.set(settings.paused, forKey: "paused")
         defaults.removeObject(forKey: "settings")

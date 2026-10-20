@@ -6,8 +6,9 @@ description: Film grain over the picture, and a centred title such as your compu
 
 ## Grain
 
-A fine, even grain over the whole picture takes the plastic smoothness off a gradient and hides banding. **Grain** in
-the menu has none, subtle (the default) and strong; **Settings…** has a slider. The grain is about a point across on
+A fine, even grain over the whole picture takes the plastic smoothness off a gradient and hides banding. It is on out
+of the box at a subtle 0.035; it is one of the [effects](../pictures/effects.md), with a slider for its amount, or off.
+The grain is about a point across on
 any display.
 
 | None | Strong |
@@ -16,8 +17,8 @@ any display.
 
 ## A title
 
-**Show Title** writes a title and a smaller subtitle in the middle of the picture, white on dark pictures and near
-black on light ones. It is off until you turn it on. The text is set in **Settings…**, where these are filled in:
+**Show a title**, on the **Title** page of **Settings…**, writes a title and a smaller subtitle in the middle of the picture, white on dark pictures and near
+black on light ones. It is off until you turn it on. These are filled in:
 
 | Placeholder | Becomes |
 |---|---|

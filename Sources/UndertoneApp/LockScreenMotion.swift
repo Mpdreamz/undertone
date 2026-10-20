@@ -6,7 +6,12 @@ import UndertoneCore
 @MainActor
 enum LockScreenMotion {
     static func toggle() {
-        if Desktop.shared.settings.lockScreenMotion {
+        set(!Desktop.shared.settings.lockScreenMotion)
+    }
+
+    static func set(_ on: Bool) {
+        guard on != Desktop.shared.settings.lockScreenMotion else { return }
+        if !on {
             Desktop.shared.update { $0.lockScreenMotion = false }
             MotionStudio.shared.stop()
             return

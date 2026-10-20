@@ -9,7 +9,7 @@ that is set), so you can keep them in your dotfiles and have every Mac look the 
 
 - **Edits apply on their own.** Undertone notices a change to the file within a second, whether you edit it, a
   dotfiles manager (chezmoi, stow, yadm) writes it, or a `git pull` brings it in. No restart.
-- **The menu writes it.** A change from the menu or the settings window writes the whole file again, in the layout
+- **Settings write it.** A change in Settings or the menu writes the whole file again, in the layout
   below. Comments of your own are lost when that happens; keep notes elsewhere, or make your changes in the file.
 - **A link stays a link.** If `config.toml` is a symbolic link (stow, or chezmoi in symlink mode), Undertone writes to
   the file it points at.
@@ -26,21 +26,72 @@ Every setting, at its default (`undertone config --defaults` prints this):
 
 ```toml
 # Undertone's settings. Undertone reads this file when it changes, and writes it (in this layout, without
-# comments of your own) when you change a setting from its menu or settings window.
+# comments of your own) when you change a setting from its settings window or menu.
 # https://mpdreamz.github.io/undertone/reference/configuration/
 
-[picture]
-style = "random"  # random, or mesh, flow, waves, orbs, rings, dunes, contour, silk, aurora, bauhaus, blobs
-tonality = "random"  # random, or ember, tide, aurora, dusk, moss, glacier, citrus, mono
-effect = "none"  # none, random, or dither, halftone, glass, bloom, leak, paper, posterize
-spaces = "different"  # different (a picture per space) or same
-grain = 0.035  # 0 for none, 0.035 subtle, 0.06 strong
+[style]
+mode = "shuffle"  # shuffle (a new style each shuffle) or always
+always = "mesh"  # the style when mode = "always"
+never = []  # left out of shuffles: mesh, flow, waves, orbs, rings, dunes, contour, silk, aurora, bauhaus, blobs
+
+[tonality]
+mode = "shuffle"  # shuffle or always
+always = "ember"  # the tonality when mode = "always"
+never = []  # left out of shuffles: ember, tide, aurora, dusk, moss, glacier, citrus, mono
+
+# Effects go over every picture, in a fixed order: glass, halftone, vignette, bloom, posterize, paper, leak,
+# dither, grain. Each has its own section; on = false turns it off and keeps its settings here.
+[effects]
+random = false  # one more effect on each shuffle, chosen at random
+random_never = []  # left out: dither, halftone, glass, bloom, leak, paper, posterize
+
+[effects.vignette]
+on = true
+strength = 1.0  # 0 to 3; 1 is the usual
+
+[effects.grain]
+on = true
+amount = 0.035  # 0 to 0.2; 0.035 subtle, 0.06 strong
+
+[effects.dither]
+on = false
+levels = 4  # levels per colour, 2 to 16
+cell = 1.0  # points per cell, 1 to 4
+
+[effects.halftone]
+on = false
+spacing = 8.0  # points between dots, 4 to 24
+angle = 45.0  # degrees, 0 to 90
+
+[effects.glass]
+on = false
+width = 36.0  # points per flute, 12 to 96
+strength = 0.55  # how much each flute magnifies, 0 to 0.9
+
+[effects.bloom]
+on = false
+threshold = 0.45  # how bright a part must be to glow, 0 to 1
+strength = 0.6  # 0 to 1.5
+
+[effects.leak]
+on = false
+strength = 1.0  # 0 to 2
+warmth = 1.0  # 0 rose to 1 amber
+
+[effects.paper]
+on = false
+strength = 1.0  # 0 to 2
+
+[effects.posterize]
+on = false
+bands = 7  # bands of lightness, 3 to 16
 
 [shuffle]
 every = "never"  # never, hourly, 3h or daily
 on_wake = false  # a new picture on login and wake
 
 [screen]
+spaces = "same"  # same (one picture on every space) or different
 hide_notch = false  # a black menu bar strip on displays with a notch
 round_corners = false  # black corners, curved like macOS's windows
 
@@ -68,5 +119,7 @@ The file is a small part of [TOML](https://toml.io): sections, `key = value`, te
 | `undertone config --defaults` | A file with every setting at its default, to start from. |
 | `undertone config --check [file]` | What Undertone cannot use in the file (or in `file`), by line; exits with 1 when there is anything, for a dotfiles repository's checks. |
 
-Settings from before the file existed (Undertone 0.3 and earlier) are moved into it the first time a newer Undertone
-starts.
+Older settings move over on their own: from Undertone 0.3's preferences into the file, and a file in Undertone 0.4's
+layout (with a `[picture]` section) is read and written again in this one. A locked style or tonality becomes
+`mode = "always"`, random becomes shuffling among all, grain becomes `[effects.grain]`, and a chosen effect is turned
+on.

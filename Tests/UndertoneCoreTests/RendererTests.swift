@@ -41,8 +41,20 @@ struct RendererTests {
 
     @Test(arguments: Style.allCases)
     func everyStyleDrawsSomethingInBothAppearances(style: Style) {
-        let dark = Self.draw(Recipe(style: style, tonality: .ember, appearance: .dark, seed: 3, grain: 0))
-        let light = Self.draw(Recipe(style: style, tonality: .ember, appearance: .light, seed: 3, grain: 0))
+        let dark = Self.draw(Recipe(
+            style: style,
+            tonality: .ember,
+            appearance: .dark,
+            seed: 3,
+            effects: Effects(grain: nil)
+        ))
+        let light = Self.draw(Recipe(
+            style: style,
+            tonality: .ember,
+            appearance: .light,
+            seed: 3,
+            effects: Effects(grain: nil)
+        ))
         #expect(dark.pixels.count == Self.width * Self.height * 4)
         // Not one flat colour: the style drew shapes or a gradient.
         #expect(Self.spread(dark) > 12, "\(style) dark is flat")
@@ -68,7 +80,13 @@ struct RendererTests {
     func everyEffectChangesThePictureButKeepsItsLook(effect: Effect) {
         for appearance in Appearance.allCases {
             let plain = Self.draw(Recipe(style: .aurora, tonality: .aurora, appearance: appearance, seed: 19))
-            var recipe = Recipe(style: .aurora, tonality: .aurora, appearance: appearance, seed: 19, effect: effect)
+            var recipe = Recipe(
+                style: .aurora,
+                tonality: .aurora,
+                appearance: appearance,
+                seed: 19,
+                effects: Effects.standard.with(effect)
+            )
             let treated = Self.draw(recipe)
             #expect(treated.pixels != plain.pixels, "\(effect) did nothing in \(appearance)")
             #expect(abs(Self.luma(treated) - Self.luma(plain)) < 0.15, "\(effect) changed the brightness too much")
@@ -78,16 +96,46 @@ struct RendererTests {
         }
     }
 
-    @Test func noEffectDrawsWhatAPlainRecipeDraws() {
+    @Test func aNewRecipeHasTheVignetteAndASubtleGrain() {
         let plain = Recipe(style: .silk, tonality: .dusk, appearance: .dark, seed: 5)
+        #expect(plain.effects == Effects(vignette: 1, grain: 0.035))
         var none = plain
-        none.effect = .none
-        #expect(Self.draw(plain).pixels == Self.draw(none).pixels)
+        none.effects = .none
+        #expect(Self.draw(plain).pixels != Self.draw(none).pixels)
+    }
+
+    @Test func effectsStack() {
+        let base = Recipe(style: .waves, tonality: .tide, appearance: .dark, seed: 4)
+        var one = base, two = base
+        one.effects = Effects.standard.with(.halftone)
+        two.effects = Effects.standard.with(.halftone).with(.leak)
+        #expect(Self.draw(one).pixels != Self.draw(base).pixels)
+        #expect(Self.draw(two).pixels != Self.draw(one).pixels, "a second effect adds to the first")
+    }
+
+    @Test func anEffectsSettingsChangeIt() {
+        var recipe = Recipe(style: .rings, tonality: .citrus, appearance: .dark, seed: 4)
+        recipe.effects.posterize = .init()
+        let seven = Self.draw(recipe)
+        recipe.effects.posterize?.bands = 3
+        #expect(Self.draw(recipe).pixels != seven.pixels)
     }
 
     @Test func grainOnlyAddsNoise() {
-        let clean = Self.draw(Recipe(style: .mesh, tonality: .glacier, appearance: .dark, seed: 9, grain: 0))
-        let grainy = Self.draw(Recipe(style: .mesh, tonality: .glacier, appearance: .dark, seed: 9, grain: 0.06))
+        let clean = Self.draw(Recipe(
+            style: .mesh,
+            tonality: .glacier,
+            appearance: .dark,
+            seed: 9,
+            effects: Effects(grain: nil)
+        ))
+        let grainy = Self.draw(Recipe(
+            style: .mesh,
+            tonality: .glacier,
+            appearance: .dark,
+            seed: 9,
+            effects: Effects(grain: 0.06)
+        ))
         #expect(clean.pixels != grainy.pixels)
         #expect(abs(Self.luma(clean) - Self.luma(grainy)) < 0.02)
     }
@@ -103,7 +151,13 @@ struct RendererTests {
     }
 
     @Test func recipesRoundTripThroughJSON() throws {
-        let recipe = Recipe(style: .silk, tonality: .moss, appearance: .light, seed: .max, grain: 0.05)
+        let recipe = Recipe(
+            style: .silk,
+            tonality: .moss,
+            appearance: .light,
+            seed: .max,
+            effects: Effects(grain: 0.05, halftone: .init())
+        )
         let decoded = try JSONDecoder().decode(Recipe.self, from: JSONEncoder().encode(recipe))
         #expect(decoded == recipe)
     }

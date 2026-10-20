@@ -62,10 +62,7 @@ struct MotionTests {
     }
 
     @Test func timingSettingsHaveDefaultsAndLoad() throws {
-        let settings = try JSONDecoder().decode(
-            Settings.self,
-            from: Data(#"{"motionSpeed":"calm","settleEasing":"spring"}"#.utf8)
-        )
+        let settings = ConfigFile.parse("[motion]\nspeed = \"calm\"\neasing = \"spring\"").settings
         #expect(settings.motionSpeed.seconds == 20)
         #expect(settings.settleEasing == .spring)
         #expect(settings.motionMovement == .normal)

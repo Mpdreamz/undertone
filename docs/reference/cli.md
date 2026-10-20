@@ -30,7 +30,8 @@ undertone render --style silk --tonality dusk --appearance light --seed 9 -o sil
 | `--appearance` | `dark` | `dark` or `light`. |
 | `--seed` | `1` | Any whole number; the same seed draws the same picture. |
 | `--grain` | `0.035` | `0` for none. |
-| `--effect` | `none` | See `undertone effects`. |
+| `--vignette` | `1` | `0` for none. |
+| `--effect` | none | Turns an effect on at its defaults; give it more than once for more. See `undertone effects`. |
 | `--size` | `3024x1964` | In pixels (a 14-inch MacBook Pro). |
 | `--scale` | `2` | Pixels to a point: grain, lines and text follow points. |
 | `--strip` | `0` | A black strip across the top, in points (37 is a notched MacBook's menu bar). |

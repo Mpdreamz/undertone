@@ -1,14 +1,35 @@
 ---
-description: Undertone's seven effects, over any style and tonality.
+description: The effects over every Undertone picture, each with its own settings, and how to add a random one.
 ---
 
 # Effects
 
-An effect is a treatment over the whole picture, on top of any style in any tonality. Effects are off until you
-choose one under **Effect** in the menu: lock one, or choose **Random** and every shuffle picks a different one. A
-picture with an effect is still drawn once and reused.
+Effects go over every picture, whatever its style and tonality. Any number can be on at once, each with its own
+settings, on the **Effects** page of **Settings…**, which draws each one over the picture showing now.
 
-Each example below is the same aurora picture, dark on the left and light on the right.
+![The Effects page: the vignette and grain on, each with its slider and a picture of it](../images/shots/app/settings-effects.png)
+
+Out of the box two are on: a **vignette** that darkens the corners a little, and a subtle **grain**. The others are
+off until you turn them on.
+
+They apply in a fixed order, so no effect undoes another: glass and halftone (which both read the picture somewhere
+else), the vignette, bloom, posterize, paper, the light leak, dither, and grain last.
+
+| Effect | Settings |
+|---|---|
+| Vignette | Strength, 0 to 3 (1 is the usual; dark pictures get more than light ones) |
+| Grain | Amount, 0 to 0.12 (0.035 subtle, 0.06 strong) |
+| Dither | Levels per colour, 2 to 16; cell size, 1 to 4 points |
+| Halftone | Spacing between dots, 4 to 24 points; the grid's angle |
+| Glass | Flute width, 12 to 96 points; how much each flute magnifies |
+| Bloom | How bright a part must be to glow; strength |
+| Light leak | Strength; warmth, from rose to amber |
+| Paper | Strength |
+| Posterize | Bands of lightness, 3 to 16 |
+
+Each example below is the same aurora picture at the effect's default settings, dark on the left and light on the
+right.
+
 
 ## Dither
 
@@ -66,4 +87,31 @@ Hard bands of lightness instead of smooth gradients, the colour kept: a screen p
 |---|---|
 | ![Posterize over aurora, dark](../images/shots/effects/posterize-dark-1.jpg) | ![Posterize over aurora, light](../images/shots/effects/posterize-light-1.jpg) |
 
-`undertone render --effect halftone` draws one from the command line; `undertone effects` lists them.
+## A random effect on each shuffle
+
+**Add a random effect on each shuffle**, on the Effects page, adds one more effect to every new picture: a different
+one each time, at its default settings, chosen from those you leave checked and that are not already on. It is off
+until you turn it on.
+
+## In the config file
+
+Every effect has its own section in the [config file](../reference/configuration.md); `on` turns it on or off and
+keeps its settings:
+
+```toml
+[effects]
+random = false
+random_never = ["dither"]
+
+[effects.grain]
+on = true
+amount = 0.035
+
+[effects.halftone]
+on = true
+spacing = 12
+angle = 45
+```
+
+`undertone render --effect halftone --effect leak` draws effects from the command line (`--effect` can be given more
+than once); `undertone effects` lists them.

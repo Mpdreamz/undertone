@@ -5,7 +5,7 @@ description: Undertone's eleven styles, each in light and dark.
 # Styles
 
 Each style below is shown in one tonality, dark on the left and light on the right; every style works in every
-[tonality](tonalities.md). Lock one under **Style** in the menu, or leave it on **Random**.
+[tonality](tonalities.md). On the **Picture** page of **Settings…**, keep one, or shuffle among those you leave checked.
 
 ## Mesh
 

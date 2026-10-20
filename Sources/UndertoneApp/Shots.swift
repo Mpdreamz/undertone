@@ -26,30 +26,51 @@ enum Shots {
 
     // MARK: The settings window
 
+    /// The window's pages, as a reader of the docs would see them: a few styles left out of shuffles, halftone on,
+    /// the notch hidden and the corners rounded. Its own model, so nothing on this Mac is read or changed.
     private static func settings(into folder: URL) throws {
+        Thumbnails.drawImmediately = true
         var settings = UndertoneCore.Settings()
-        settings.tonality = .locked(.dusk)
+        settings.style.never = [.bauhaus, .contour]
+        settings.tonality.never = [.mono]
+        settings.effects.halftone = .init()
         settings.interval = .daily
         settings.hideNotch = true
         settings.roundCorners = true
-        settings.showText = true
         settings.lockScreenMotion = true
-        for appearance in Appearance.allCases {
-            let view = SettingsView(settings: settings, onChange: { _ in })
-            let image = try hosted(view, appearance: appearance == .dark ? .darkAqua : .aqua)
-            try write(image, to: folder.appendingPathComponent("settings-\(appearance.rawValue).png"))
+        let pick = Pick(style: .waves, tonality: .dusk, seed: 100)
+        let shots: [(SettingsPage, Appearance, String)] = [
+            (.picture, .dark, "settings-dark"), (.picture, .light, "settings-light"),
+            (.effects, .dark, "settings-effects"), (.motion, .dark, "settings-motion"),
+        ]
+        for (page, appearance, name) in shots {
+            let model = SettingsModel(settings: settings, pick: pick, live: false, appearance: appearance)
+            let image = try hosted(
+                SettingsView(model: model, page: page), appearance: appearance == .dark ? .darkAqua : .aqua,
+                size: SettingsView.size
+            )
+            try write(image, to: folder.appendingPathComponent("\(name).png"))
         }
     }
 
-    private static func hosted(_ view: some View, appearance: NSAppearance.Name) throws -> CGImage {
+    private static func hosted(_ view: some View, appearance: NSAppearance.Name, size: NSSize? = nil) throws
+        -> CGImage
+    {
         let hosting = NSHostingView(rootView: view)
         hosting.safeAreaRegions = []
         hosting.appearance = NSAppearance(named: appearance)
-        hosting.frame = NSRect(origin: .zero, size: hosting.fittingSize)
+        hosting.frame = NSRect(origin: .zero, size: size ?? hosting.fittingSize)
         let window = NSWindow(contentRect: hosting.frame, styleMask: [.borderless], backing: .buffered, defer: false)
         window.appearance = NSAppearance(named: appearance)
         window.contentView = hosting
+        // Lists and forms draw only in a window that is on screen: put it there, far off to the side and invisible,
+        // and let the run loop lay them out.
+        window.setFrameOrigin(NSPoint(x: -20000, y: -20000))
+        window.alphaValue = 0
+        window.orderFrontRegardless()
+        RunLoop.main.run(until: Date().addingTimeInterval(0.6))
         hosting.layoutSubtreeIfNeeded()
+        defer { window.orderOut(nil) }
         guard let rep = hosting.bitmapImageRepForCachingDisplay(in: hosting.bounds) else {
             throw Failure(description: "no bitmap for the settings window")
         }
@@ -80,12 +101,18 @@ enum Shots {
     static let scale: CGFloat = 1.5
 
     private static func laptops(into folder: URL) throws {
-        let aurora = Recipe(style: .aurora, tonality: .aurora, appearance: .dark, seed: 19, grain: 0.04)
+        let aurora = Recipe(
+            style: .aurora,
+            tonality: .aurora,
+            appearance: .dark,
+            seed: 19,
+            effects: Effects(grain: 0.04)
+        )
         let landing = folder.appendingPathComponent("landing")
         try jpeg(laptop(aurora, notch: true, corners: true), to: landing.appendingPathComponent("hero.jpg"))
         try jpeg(
             laptop(
-                Recipe(style: .silk, tonality: .dusk, appearance: .light, seed: 9, grain: 0.04),
+                Recipe(style: .silk, tonality: .dusk, appearance: .light, seed: 9, effects: Effects(grain: 0.04)),
                 notch: true, corners: true, title: ("workstation", "you · macOS 26")
             ),
             to: landing.appendingPathComponent("title.jpg")
@@ -93,14 +120,14 @@ enum Shots {
 
         // The notch, without and with the strip: the middle of the top edge.
         let overlays = folder.appendingPathComponent("overlays")
-        let waves = Recipe(style: .flow, tonality: .dusk, appearance: .light, seed: 7, grain: 0.035)
+        let waves = Recipe(style: .flow, tonality: .dusk, appearance: .light, seed: 7)
         let notchCrop = CGRect(x: screen.width / 2 - 360, y: 0, width: 720, height: 200)
         for on in [false, true] {
             let image = try laptop(waves, notch: on, corners: on, bezel: false)
             try jpeg(crop(image, notchCrop), to: overlays.appendingPathComponent("notch-\(on ? "on" : "off").jpg"))
         }
         // A window tiled flush to the top left corner, without and with rounded corners.
-        let dunes = Recipe(style: .mesh, tonality: .citrus, appearance: .light, seed: 4, grain: 0.035)
+        let dunes = Recipe(style: .mesh, tonality: .citrus, appearance: .light, seed: 4)
         let cornerCrop = CGRect(x: 0, y: 0, width: 220, height: 124)
         for on in [false, true] {
             let image = try laptop(dunes, notch: true, corners: on, window: true, bezel: false)
@@ -267,7 +294,7 @@ enum Shots {
 
     /// Undertone's mark: a disc of one picture, its left half drawn light and its right half dark.
     private static func mark(into folder: URL) throws {
-        let recipe = Recipe(style: .mesh, tonality: .ember, appearance: .dark, seed: 3, grain: 0)
+        let recipe = Recipe(style: .mesh, tonality: .ember, appearance: .dark, seed: 3, effects: Effects(grain: nil))
         for size in [32, 64, 180, 512] {
             let dark = Renderer.render(recipe, width: size, height: size)
             var light = recipe

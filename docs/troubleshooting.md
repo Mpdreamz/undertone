@@ -10,7 +10,7 @@ that **Pause** is off.
 **I chose a picture in System Settings and it went away.** While Undertone runs, its picture wins; turn on **Pause** to
 keep yours.
 
-**It stops when I restart.** Turn on **Open at Login**.
+**It stops when I restart.** Turn on **Open at login** on the **General** page of **Settings…**.
 
 **A space shows the old picture for a moment.** macOS lets an app set only the space on screen, so each space gets its
 new picture when you first switch to it after a shuffle. See [Spaces](desktop/spaces.md).

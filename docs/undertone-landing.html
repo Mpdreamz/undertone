@@ -241,7 +241,7 @@
         <li><b>Drawn in the background</b> after each shuffle, played by the Mac's video hardware.</li>
         <li><b>Your pace:</b> calm, normal or lively; subtle or strong; and it comes to rest with a glide, an ease or
           a spring.</li>
-        <li><b>One switch</b> in the menu, and Undertone as your screen saver.</li>
+        <li><b>One switch</b> in Settings, and Undertone as your screen saver.</li>
       </ul>
     </div>
     <div class="frame"><video src="images/shots/landing/motion.mp4" poster="images/shots/styles/aurora-dark.jpg" autoplay muted loop playsinline aria-label="An aurora picture drifting on a loop"></video></div>
@@ -253,7 +253,7 @@
     <div class="eyebrow">Eleven styles</div>
     <h2>Gradients, and a lot of shapes.</h2>
     <p class="sub">Glows, marbling, layered waves, lit spheres, rings, dunes, topographic lines, silk, aurora, a bauhaus
-      grid and a lava lamp. Every picture is generated: each tile below is shuffling, its style locked, its tonality
+      grid and a lava lamp. Every picture is generated: each tile below is shuffling, its style kept, its tonality
       and layout new every time. Lock a style, or let every shuffle pick.</p>
     <div class="toggle" role="group" aria-label="Appearance">
       <button class="on" data-appearance="dark">Dark</button><button data-appearance="light">Light</button>
@@ -306,7 +306,7 @@
     <div class="eyebrow">Seven effects</div>
     <h2>Print, glass and film.</h2>
     <p class="sub">Dither, halftone, reeded glass, bloom, a light leak, paper and posterize, over any style in any
-      tonality. Lock one, leave them off, or let every shuffle pick a new one.</p>
+      tonality. Turn on as many as you like, each with its own settings, or let every shuffle add one at random.</p>
     <div class="toggle" role="group" aria-label="Appearance">
       <button class="on" data-appearance="dark">Dark</button><button data-appearance="light">Light</button>
     </div>
@@ -330,8 +330,8 @@
       <div class="eyebrow">On a schedule</div>
       <h2>A new background every day. Or hour.</h2>
       <p class="sub">Shuffle by hand, from a hotkey, or let Undertone pick a new picture every hour, every three hours or
-        every day, and on login and wake. Style and tonality are separate choices: lock either, and only the other
-        one changes.</p>
+        every day, and on login and wake. Style and tonality are separate choices: keep either, and only the other
+        one changes, and either can leave some out.</p>
       <ul>
         <li><b>Theme switch:</b> the same picture, redrawn from the other half of its tonality.</li>
         <li><b>Drawn on your Mac</b> at each display's full resolution, once, then reused.</li>
@@ -340,9 +340,9 @@
     </div>
     <div class="checks">
       <div class="check"><b>Random style, random tonality</b><span>Something new every time.</span></div>
-      <div class="check"><b>Locked style</b><span>The same kind of picture in new colours.</span></div>
-      <div class="check"><b>Locked tonality</b><span>New shapes in colours you chose.</span></div>
-      <div class="check"><b>Both locked</b><span>The same look, laid out anew.</span></div>
+      <div class="check"><b>Leave some out</b><span>Shuffle every style but the ones you uncheck.</span></div>
+      <div class="check"><b>Keep the style</b><span>The same kind of picture in new colours.</span></div>
+      <div class="check"><b>Keep the tonality</b><span>New shapes in colours you chose.</span></div>
       <div class="check"><b>Every hour, 3 hours or day</b><span>Counted across sleep and restarts.</span></div>
       <div class="check"><b><code>undertone shuffle</code></b><span>For a hotkey, a Shortcut or a script.</span></div>
     </div>
@@ -386,18 +386,18 @@
 <section id="settings">
   <div class="wrap feat rev">
     <div class="copyblock">
-      <div class="eyebrow">One menu</div>
-      <h2>Everything a click away.</h2>
-      <p class="sub">Shuffle, lock a style, a tonality or an effect, a picture per space, automatic shuffles every hour, three hours
-        or day, grain, the notch, corners and a title: all in the menu bar item, with a settings window for the
-        text and the sliders.</p>
+      <div class="eyebrow">Settings you can see</div>
+      <h2>Choose by eye.</h2>
+      <p class="sub">Every style and tonality is drawn in the settings, in the colours you have now: click to keep one or
+        to leave it out of shuffles. Each effect shows itself over your picture, with its own sliders, and a preview of
+        the whole thing sits on top. A few quick toggles live in the menu bar.</p>
       <ul>
         <li><b><code>undertone shuffle</code></b> for a hotkey.</li>
         <li><b><code>undertone render</code></b> draws any picture to a file, without the app.</li>
         <li><b>Updates itself</b>, signed and notarized.</li>
       </ul>
     </div>
-    <div class="center"><img src="images/shots/app/settings-dark.png" alt="Undertone's settings window" loading="lazy" style="max-width:440px;margin:0 auto;border-radius:12px;border:1px solid var(--line)"></div>
+    <div class="center"><img src="images/shots/app/settings-dark.png" alt="Undertone's settings window" loading="lazy" style="width:100%;border-radius:12px;border:1px solid var(--line)"></div>
   </div>
 </section>
 
@@ -416,7 +416,7 @@
           minutes in the background on two cores; playing it is the Mac's video hardware.</p></details>
       <details><summary>Can I keep the settings in my dotfiles?</summary>
         <p>Yes: they are a plain <code>~/.config/undertone/config.toml</code>, read again whenever it changes and
-          written when you change something from the menu. <a href="reference/configuration/">The file.</a></p></details>
+          written when you change something in Settings. <a href="reference/configuration/">The file.</a></p></details>
       <details><summary>Which Macs?</summary>
         <p>Apple Silicon Macs on macOS 15 or later.</p></details>
       <details><summary>Is it free?</summary>

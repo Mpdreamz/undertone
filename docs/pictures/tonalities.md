@@ -19,5 +19,5 @@ are the same *waves* picture; only the tonality changes.
 | **Citrus**<br>Orange and yellow on warm brown. | ![citrus, dark](../images/shots/tonalities/citrus-dark.jpg) | ![citrus, light](../images/shots/tonalities/citrus-light.jpg) |
 | **Mono**<br>Greys only. | ![mono, dark](../images/shots/tonalities/mono-dark.jpg) | ![mono, light](../images/shots/tonalities/mono-light.jpg) |
 
-Lock one under **Tonality** in the menu, or leave it on **Random**: a random tonality changes on every shuffle,
-independently of the style.
+On the **Picture** page of **Settings…**, keep one, or shuffle among those you leave checked, independently of the
+style.
