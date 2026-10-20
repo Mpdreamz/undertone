@@ -65,3 +65,11 @@ jobs:
           # Every image the landing page names exists.
           grep -o 'src="images/[^"]*"' docs/undertone-landing.html | sed 's/src="//; s/"$//' | sort -u \
             | while read -r image; do test -f "docs/$image" || { echo "missing docs/$image" >&2; exit 1; }; done
+          # And the shuffles each style tile cycles through.
+          test -f docs/images/shots/styles/shuffles/shuffles.json
+          grep -o 'data-style="[a-z]*"' docs/undertone-landing.html | sed 's/data-style="//; s/"$//' | while read -r style; do
+            for n in 1 2 3 4; do for appearance in dark light; do
+              test -f "docs/images/shots/styles/shuffles/$style-$appearance-$n.jpg" \
+                || { echo "missing shuffle $style-$appearance-$n" >&2; exit 1; }
+            done; done
+          done
