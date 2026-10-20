@@ -10,6 +10,7 @@ Everything is set from the menu or **Settings…**, and applies straight away.
 |---|---|---|---|
 | Style | Random | Menu, Settings | One of the [styles](../pictures/styles.md), or a new one on every shuffle. |
 | Tonality | Random | Menu, Settings | One of the [tonalities](../pictures/tonalities.md), or a new one on every shuffle. |
+| Effect | None | Menu, Settings | One of the [effects](../pictures/effects.md), or a new one on every shuffle. |
 | Spaces | A picture per space | Menu, Settings | See [Spaces](../desktop/spaces.md). |
 | Shuffle automatically | Never | Menu, Settings | Never, every hour, every 3 hours, every day. |
 | Shuffle on login and wake | Off | Menu, Settings | |

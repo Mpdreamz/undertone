@@ -12,6 +12,7 @@ Click the half-filled circle in the menu bar.
 | **Shuffle** | A new picture now. A random style or tonality changes; a locked one stays. See [Shuffling](../pictures/shuffling.md). |
 | **Style** | **Random**, or one of the [eleven styles](../pictures/styles.md) to keep. |
 | **Tonality** | **Random**, or one of the [eight tonalities](../pictures/tonalities.md) to keep. |
+| **Effect** | None (the default), **Random**, or one of the [seven effects](../pictures/effects.md). |
 | **Spaces** | [A picture per space](../desktop/spaces.md), or the same one everywhere. |
 | **Shuffle Automatically** | Never, every hour, every 3 hours or every day, and on login and wake. |
 | **Grain** | None, subtle or strong. The settings window has a slider. |

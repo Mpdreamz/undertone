@@ -10,6 +10,7 @@ light version of the same picture, and switching appearance switches the picture
 
 - [Styles](styles.md): the eleven.
 - [Tonalities](tonalities.md): the eight, each in light and dark.
+- [Effects](effects.md): dither, halftone, glass, bloom, a light leak, paper and posterize, over any picture.
 - [Shuffling](shuffling.md): random or locked, by hand, on a schedule, or from the command line.
 
 Undertone draws every picture itself, on your Mac, at your display's full resolution; nothing is downloaded.
