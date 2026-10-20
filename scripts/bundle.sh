@@ -29,6 +29,12 @@ if ! otool -l "$app/Contents/MacOS/Undertone" | grep -q "@executable_path/../Fra
 fi
 sed -e "s/__VERSION__/$version/g" -e "s/__BUILD__/$build/g" -e "s/__COMMIT__/$commit/g" \
   "$root/Resources/Info.plist" >"$app/Contents/Info.plist"
+# The icon Finder and System Settings show (drawn by `mise run shots`, and committed; missing only the first time).
+if [ -f "$root/Resources/AppIcon.icns" ]; then
+  cp "$root/Resources/AppIcon.icns" "$app/Contents/Resources/AppIcon.icns"
+else
+  echo "bundle: no Resources/AppIcon.icns yet (mise run shots draws it)" >&2
+fi
 # The screen saver (Contents/Resources/Undertone.saver), which the app copies to ~/Library/Screen Savers: the
 # library SwiftPM built, its Info.plist, and a thumbnail drawn by the renderer for System Settings.
 saver="$app/Contents/Resources/Undertone.saver"

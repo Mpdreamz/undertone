@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build the documentation exactly as CI does, then serve it: docs-builder, then the landing page over the generated
+# Build the documentation exactly as the docs workflow publishes it (it runs this script), then serve it: docs-builder, then the landing page over the generated
 # index.html. `docs-builder serve` renders on demand and never applies that override, so it would preview the wrong
 # home page.
 #
@@ -9,11 +9,13 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root"
 
-# The sub-path GitHub Pages serves from (mpdreamz.github.io/undertone). The landing page's <base href> and the
-# workflow's prefix: input must agree with it, and nothing but this check would notice if they drifted.
+# Where GitHub Pages serves the site: its host, for canonical links and the image social sites show, and its
+# sub-path. The landing page's <base href> and the CI docs job's prefix: input must agree with the sub-path, and
+# nothing but this check would notice if they drifted.
+site="https://mpdreamz.github.io"
 path_prefix="undertone"
 landing="docs/undertone-landing.html"
-workflow=".github/workflows/docs.yml"
+workflow=".github/workflows/ci.yml"
 expected_base="/"
 [[ -n "$path_prefix" ]] && expected_base="/$path_prefix/"
 actual_base="$(grep -o '<base href="[^"]*"' "$landing" | sed 's/<base href="//; s/"$//')"
@@ -35,7 +37,8 @@ fi
 tool=".artifacts/tools/docs-builder"
 if [[ ! -x "$tool" ]]; then
   arch="$(uname -m)"; [[ "$arch" == "x86_64" ]] && arch="x64"
-  archive="docs-builder-mac-$arch.zip"
+  os="mac"; [[ "$(uname -s)" == "Linux" ]] && os="linux"
+  archive="docs-builder-$os-$arch.zip"
   version="${DOCS_BUILDER_VERSION:-latest}"
   if [[ "$version" == "latest" ]]; then
     url="https://github.com/elastic/docs-builder/releases/latest/download/$archive"
@@ -51,13 +54,14 @@ if [[ ! -x "$tool" ]]; then
 fi
 
 if [[ -n "$path_prefix" ]]; then
-  "$tool" build --path docs --path-prefix "$path_prefix"
+  "$tool" build --path docs --path-prefix "$path_prefix" --canonical-base-url "$site"
 else
-  "$tool" build --path docs
+  "$tool" build --path docs --canonical-base-url "$site"
 fi
 out=".artifacts/docs/html"
 cp "$landing" "$out/index.html"
 cp docs/robots.txt "$out/robots.txt"
+cp docs/site.webmanifest "$out/site.webmanifest"
 cp install.sh "$out/install.sh"
 # docs-builder copies images, not the index of the landing page's shuffles.
 cp docs/images/shots/styles/shuffles/shuffles.json "$out/images/shots/styles/shuffles/"

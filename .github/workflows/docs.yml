@@ -28,19 +28,11 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # scripts/docs.sh, as `mise run docs` runs it: docs-builder with the site's own address (for canonical links
+      # and the image social sites show; the docs-builder action cannot pass it), then the landing page and the
+      # files docs-builder does not copy.
       - name: Build documentation
-        uses: elastic/docs-builder@main
-        with:
-          prefix: undertone
-
-      # Same overrides as scripts/docs.sh, in the same order.
-      - name: Use the landing page
-        run: |
-          cp docs/undertone-landing.html .artifacts/docs/html/index.html
-          cp docs/robots.txt .artifacts/docs/html/robots.txt
-          cp install.sh .artifacts/docs/html/install.sh
-          cp docs/images/shots/styles/shuffles/shuffles.json .artifacts/docs/html/images/shots/styles/shuffles/
-          cp docs/images/shots/landing/motion.mp4 .artifacts/docs/html/images/shots/landing/
+        run: scripts/docs.sh --noserve
 
       - name: Setup Pages
         uses: actions/configure-pages@v6.0.0

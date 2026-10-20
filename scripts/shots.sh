@@ -89,9 +89,20 @@ mkdir -p "$shots/landing"
 "$app/Contents/Helpers/undertone" movie --style aurora --tonality aurora --appearance dark --seed 19 \
   --size 960x624 --scale 1 --seconds 8 --fps 30 --settle 0 --codec h264 -o docs/images/shots/landing/motion.mp4
 
-# The picture social sites show for a link.
-$render --style aurora --tonality aurora --appearance dark --seed 19 --grain 0.04 --size 1280x640 --scale 1 \
-  --title Undertone --subtitle "Hide the notch. Keep the colour." -o docs/images/social.jpg
-
+# The app's own images: the settings window, the laptops, the mark, the app icon, and the cards social sites show for
+# a link (social.jpg) and GitHub shows for the repository (social-github.jpg, uploaded by hand in its settings).
 UNDERTONE_SHOTS="$root/docs/images" "$app/Contents/MacOS/Undertone"
+
+# The README's lock screen motion, as a GIF (GitHub plays no videos from a repository). Needs ffmpeg.
+if command -v ffmpeg >/dev/null; then
+  ffmpeg -v error -y -i docs/images/shots/landing/motion.mp4 \
+    -vf "fps=12,scale=480:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=96[p];[b][p]paletteuse=dither=bayer:bayer_scale=5" \
+    docs/images/shots/landing/motion.gif
+else
+  echo "shots: no ffmpeg, so no motion.gif" >&2
+fi
+
+# The app icon, from the iconset the app drew.
+iconutil -c icns docs/images/icon/AppIcon.iconset -o Resources/AppIcon.icns
+rm -rf docs/images/icon
 du -sh docs/images | sed 's/^/shots: /'

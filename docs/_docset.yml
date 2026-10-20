@@ -4,9 +4,9 @@ dev_docs: true
 
 branding:
   icon: images/png/undertone-64.png
-  favicon: images/png/undertone-32.png
+  favicon: images/png/icon-32.png
   og-image: images/social.jpg
-  apple-touch-icon: images/png/undertone-180.png
+  apple-touch-icon: images/png/icon-180.png
 
 # Every image under images is drawn by Undertone: `mise run shots` (scripts/shots.sh) renders them from fixed recipes.
 toc:
