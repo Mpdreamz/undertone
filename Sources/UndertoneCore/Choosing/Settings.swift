@@ -72,7 +72,13 @@ public enum MotionMovement: String, CaseIterable, Codable, Sendable {
 /// Shuffled among every style (or tonality) but the ones in `never`, or always the same one.
 public struct Selection<Value: CaseIterable & Hashable & Sendable>: Hashable, Sendable {
     public enum Mode: String, CaseIterable, Sendable {
-        case shuffle, always
+        /// A different one each shuffle, from all but `never`.
+        case shuffle
+        /// Always `always`.
+        case always
+        /// Tonalities only: a different one each shuffle from those that suit the time of year (never mono), less
+        /// `never`. For a style it shuffles.
+        case season
     }
 
     public var mode: Mode = .shuffle
@@ -98,11 +104,24 @@ public struct Selection<Value: CaseIterable & Hashable & Sendable>: Hashable, Se
     }
 }
 
+public extension Selection where Value == Tonality {
+    /// What a shuffle chooses from on `date`: by season, the season's tonalities not in `never` (all of them when
+    /// that leaves none); otherwise as for any selection.
+    func allowed(on date: Date, in hemisphere: Hemisphere) -> [Tonality] {
+        guard mode == .season else { return mode == .always ? [always] : allowed }
+        let season = Season.on(date, in: hemisphere).tonalities
+        let left = season.filter { !never.contains($0) }
+        return left.isEmpty ? season : left
+    }
+}
+
 /// Everything the user chooses. A new install draws every style and tonality in turn, a picture shared by every
 /// space, with the vignette and a subtle grain and no other effect.
 public struct Settings: Hashable, Sendable {
     public var style = Selection<Style>(always: .mesh)
     public var tonality = Selection<Tonality>(always: .ember)
+    /// Whose seasons a tonality by season follows.
+    public var hemisphere: Hemisphere = .auto
     public var effects = Effects.standard
     /// On every shuffle, one more effect, chosen at random from those not in `randomEffectNever`.
     public var randomEffect = false

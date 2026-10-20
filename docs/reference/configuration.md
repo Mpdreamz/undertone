@@ -35,9 +35,10 @@ always = "mesh"  # the style when mode = "always"
 never = []  # left out of shuffles: mesh, flow, waves, orbs, rings, dunes, contour, silk, aurora, bauhaus, blobs
 
 [tonality]
-mode = "shuffle"  # shuffle or always
+mode = "shuffle"  # shuffle, season (suits the time of year, never mono) or always
 always = "ember"  # the tonality when mode = "always"
 never = []  # left out of shuffles: ember, tide, aurora, dusk, moss, glacier, citrus, mono
+hemisphere = "auto"  # whose seasons: auto (from the Mac's region), north or south
 
 # Effects go over every picture, in a fixed order: glass, halftone, vignette, bloom, posterize, paper, leak,
 # dither, grain. Each has its own section; on = false turns it off and keeps its settings here.

@@ -19,5 +19,5 @@ are the same *waves* picture; only the tonality changes.
 | **Citrus**<br>Orange and yellow on warm brown. | ![citrus, dark](../images/shots/tonalities/citrus-dark.jpg) | ![citrus, light](../images/shots/tonalities/citrus-light.jpg) |
 | **Mono**<br>Greys only. | ![mono, dark](../images/shots/tonalities/mono-dark.jpg) | ![mono, light](../images/shots/tonalities/mono-light.jpg) |
 
-On the **Picture** page of **Settings…**, keep one, or shuffle among those you leave checked, independently of the
-style.
+On the **Picture** page of **Settings…**, keep one, shuffle among those you leave checked, or let the
+[season](shuffling.md#by-season) choose, independently of the style.

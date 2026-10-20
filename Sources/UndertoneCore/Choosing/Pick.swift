@@ -27,10 +27,14 @@ public struct Pick: Hashable, Codable, Sendable {
     /// The first pick, or the next one: a style or tonality set to always stays; a shuffled one changes to another
     /// it is allowed (never the same, so a shuffle always looks like one); the seed is always new; and the random
     /// effect, when it is on, is a different one each time.
-    public static func next(after current: Pick?, settings: Settings, rng: inout some RandomNumberGenerator) -> Pick {
+    public static func next(
+        after current: Pick?, settings: Settings, on date: Date = Date(), rng: inout some RandomNumberGenerator
+    ) -> Pick {
         Pick(
             style: choose(settings.style, current: current?.style, rng: &rng),
-            tonality: choose(settings.tonality, current: current?.tonality, rng: &rng),
+            tonality: choose(
+                settings.tonality.allowed(on: date, in: settings.hemisphere), current: current?.tonality, rng: &rng
+            ),
             seed: rng.next(),
             effect: randomEffect(settings, current: current?.effect, rng: &rng)
         )
@@ -38,12 +42,14 @@ public struct Pick: Hashable, Codable, Sendable {
 
     /// The pick under changed settings, keeping what it can: a style newly set to always, or newly excluded, changes;
     /// the random effect appears or goes with its switch. The seed stays, so the picture is recoloured, not redrawn.
-    public func applying(_ settings: Settings) -> Pick {
+    /// By season, a tonality out of season changes too: `date` is when.
+    public func applying(_ settings: Settings, on date: Date = Date()) -> Pick {
         var pick = self
         var rng = SystemRandomNumberGenerator()
         if !settings.style.allows(style) { pick.style = Self.choose(settings.style, current: style, rng: &rng) }
-        if !settings.tonality.allows(tonality) {
-            pick.tonality = Self.choose(settings.tonality, current: tonality, rng: &rng)
+        let tonalities = settings.tonality.allowed(on: date, in: settings.hemisphere)
+        if !tonalities.contains(tonality) {
+            pick.tonality = Self.choose(tonalities, current: tonality, rng: &rng)
         }
         let choices = settings.randomEffectChoices
         if !settings.randomEffect {
@@ -57,8 +63,13 @@ public struct Pick: Hashable, Codable, Sendable {
     private static func choose<T>(
         _ selection: Selection<T>, current: T?, rng: inout some RandomNumberGenerator
     ) -> T {
-        if selection.mode == .always { return selection.always }
-        let allowed = selection.allowed
+        selection.mode == .always ? selection.always : choose(selection.allowed, current: current, rng: &rng)
+    }
+
+    /// One of `allowed`, other than `current` when there is a choice.
+    private static func choose<T: Equatable>(
+        _ allowed: [T], current: T?, rng: inout some RandomNumberGenerator
+    ) -> T {
         let others = allowed.filter { $0 != current }
         return (others.isEmpty ? allowed : others).randomElement(using: &rng)!
     }

@@ -173,6 +173,8 @@ private struct ChoiceGrid<Value: Hashable & CaseIterable & RawRepresentable & Se
     where Value.RawValue == String
 {
     @Binding var selection: Selection<Value>
+    /// When set, only these can be chosen now (the season's tonalities); the rest are shown faded.
+    var available: Set<Value>?
     let picture: (Value) -> Recipe
 
     private let columns = [GridItem(.adaptive(minimum: 132), spacing: 12)]
@@ -186,7 +188,8 @@ private struct ChoiceGrid<Value: Hashable & CaseIterable & RawRepresentable & Se
     }
 
     private func isChosen(_ value: Value) -> Bool {
-        selection.mode == .always ? selection.always == value : !selection.never.contains(value)
+        if let available, !available.contains(value) { return false }
+        return selection.mode == .always ? selection.always == value : !selection.never.contains(value)
     }
 
     private func tile(_ value: Value) -> some View {
@@ -214,6 +217,7 @@ private struct ChoiceGrid<Value: Hashable & CaseIterable & RawRepresentable & Se
     }
 
     private func tap(_ value: Value) {
+        if let available, !available.contains(value) { return }
         if selection.mode == .always {
             selection.always = value
         } else if selection.never.contains(value) {
@@ -227,6 +231,19 @@ private struct ChoiceGrid<Value: Hashable & CaseIterable & RawRepresentable & Se
 
 private struct PicturePage: View {
     @Bindable var model: SettingsModel
+
+    private var season: Season {
+        Season.on(Date(), in: model.settings.hemisphere)
+    }
+
+    private var tonalityFooter: String {
+        guard model.settings.tonality.mode == .season else {
+            return "Every tonality has a light and a dark half; the picture follows your appearance."
+        }
+        let names = season.tonalities.map(\.rawValue.capitalized).joined(separator: ", ")
+        return "It is \(season.title.lowercased()): shuffles pick from \(names), less any you uncheck. The season "
+            + "changes the tonality on its own; mono is never a season's."
+    }
 
     var body: some View {
         // The tiles show each style and tonality plainly: the effects are in the preview above.
@@ -252,17 +269,27 @@ private struct PicturePage: View {
             Section {
                 Picker("Tonality", selection: $model.settings.tonality.mode) {
                     Text("Shuffle").tag(Selection<Tonality>.Mode.shuffle)
+                    Text("By season").tag(Selection<Tonality>.Mode.season)
                     Text("Always the same").tag(Selection<Tonality>.Mode.always)
                 }
                 .pickerStyle(.segmented)
-                ChoiceGrid(selection: $model.settings.tonality) { tonality in
+                if model.settings.tonality.mode == .season {
+                    Picker("Hemisphere", selection: $model.settings.hemisphere) {
+                        Text("From this Mac's region").tag(Hemisphere.auto)
+                        Text("Northern").tag(Hemisphere.north)
+                        Text("Southern").tag(Hemisphere.south)
+                    }
+                }
+                ChoiceGrid(
+                    selection: $model.settings.tonality,
+                    available: model.settings.tonality.mode == .season ? Set(season.tonalities) : nil
+                ) { tonality in
                     var recipe = current
                     recipe.tonality = tonality
                     return recipe
                 }
             } footer: {
-                Text("Every tonality has a light and a dark half; the picture follows your appearance.")
-                    .foregroundStyle(.secondary)
+                Text(tonalityFooter).foregroundStyle(.secondary)
             }
         }
     }

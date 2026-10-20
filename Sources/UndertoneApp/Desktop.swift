@@ -67,7 +67,10 @@ final class Desktop {
         })
         // Checked every minute against the last shuffle, so the interval holds across sleep and restarts.
         timers.append(Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { _ in
-            MainActor.assumeIsolated { self.shuffleIfDue() }
+            MainActor.assumeIsolated {
+                self.shuffleIfDue()
+                self.followSeason()
+            }
         })
         if settings.shuffleOnWake { shuffle() } else { apply() }
     }
@@ -104,6 +107,17 @@ final class Desktop {
         pick = Pick.next(after: pick, settings: settings, rng: &rng)
         Preferences.pick = pick
         Preferences.lastShuffle = Date()
+        apply()
+        SettingsModel.shared.sync()
+    }
+
+    /// By season, a new season changes the tonality on its own (checked each minute with the shuffle schedule).
+    private func followSeason() {
+        guard settings.tonality.mode == .season,
+              !settings.tonality.allowed(on: Date(), in: settings.hemisphere).contains(pick.tonality)
+        else { return }
+        pick = pick.applying(settings)
+        Preferences.pick = pick
         apply()
         SettingsModel.shared.sync()
     }
