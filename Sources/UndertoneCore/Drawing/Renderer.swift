@@ -49,9 +49,15 @@ public struct Picture: Sendable {
 public enum Renderer {
     /// Draw `recipe` at `width` × `height` pixels, `scale` pixels to the point (2 on a Retina display): the shapes
     /// follow the picture's size, grain and lines follow points, so a picture looks the same on any display.
-    public static func render(_ recipe: Recipe, width: Int, height: Int, scale: Float = 1) -> Picture {
+    ///
+    /// `motion` moves it: every style has parts that drift on a loop, and the still picture is `.still`.
+    public static func render(
+        _ recipe: Recipe, width: Int, height: Int, scale: Float = 1, motion: Motion = .still
+    ) -> Picture {
         precondition(width > 0 && height > 0, "a picture needs pixels")
-        let frame = Frame(aspect: Float(width) / Float(height), pixel: 1 / Float(height), scale: scale)
+        let frame = Frame(
+            aspect: Float(width) / Float(height), pixel: 1 / Float(height), scale: scale, motion: motion
+        )
         let palette = recipe.tonality.palette(recipe.appearance)
         var rng = RNG(seed: recipe.seed)
         let shader = recipe.effect.wrap(recipe.style.shader(palette, &rng, frame), palette: palette, frame: frame)
