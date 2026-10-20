@@ -46,3 +46,22 @@ jobs:
           done
           ls build/Undertone.app/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate >/dev/null
 
+  # The docs build as docs.yml publishes it, without publishing: a broken link or a page missing from the table of
+  # contents fails here.
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build documentation
+        uses: elastic/docs-builder@main
+        with:
+          prefix: undertone
+          strict: true
+
+      - name: The landing page and its images
+        run: |
+          test -f docs/undertone-landing.html
+          # Every image the landing page names exists.
+          grep -o 'src="images/[^"]*"' docs/undertone-landing.html | sed 's/src="//; s/"$//' | sort -u \
+            | while read -r image; do test -f "docs/$image" || { echo "missing docs/$image" >&2; exit 1; }; done

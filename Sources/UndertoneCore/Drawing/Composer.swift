@@ -78,10 +78,19 @@ public enum Composer {
     }
 
     public static func png(_ image: CGImage) -> Data? {
+        encode(image, as: .png)
+    }
+
+    /// For the docs and the landing page, where a grainy PNG would weigh megabytes.
+    public static func jpeg(_ image: CGImage, quality: Double = 0.8) -> Data? {
+        encode(image, as: .jpeg, properties: [kCGImageDestinationLossyCompressionQuality: quality])
+    }
+
+    private static func encode(_ image: CGImage, as type: UTType, properties: [CFString: Any] = [:]) -> Data? {
         let data = NSMutableData()
-        guard let destination = CGImageDestinationCreateWithData(data, UTType.png.identifier as CFString, 1, nil)
+        guard let destination = CGImageDestinationCreateWithData(data, type.identifier as CFString, 1, nil)
         else { return nil }
-        CGImageDestinationAddImage(destination, image, nil)
+        CGImageDestinationAddImage(destination, image, properties as CFDictionary)
         return CGImageDestinationFinalize(destination) ? data as Data : nil
     }
 

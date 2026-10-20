@@ -10,7 +10,9 @@ enum SettingsWindow {
 
     static func show() {
         if window == nil {
-            let window = NSWindow(contentViewController: NSHostingController(rootView: SettingsView()))
+            let window = NSWindow(contentViewController: NSHostingController(rootView: SettingsView(
+                settings: Desktop.shared.settings, onChange: { next in Desktop.shared.update { $0 = next } }
+            )))
             window.title = "Undertone"
             window.styleMask = [.titled, .closable]
             window.isReleasedWhenClosed = false
@@ -22,8 +24,9 @@ enum SettingsWindow {
     }
 }
 
-private struct SettingsView: View {
-    @State private var settings = Desktop.shared.settings
+struct SettingsView: View {
+    @State var settings: UndertoneCore.Settings
+    var onChange: @MainActor (UndertoneCore.Settings) -> Void
 
     var body: some View {
         Form {
@@ -58,7 +61,7 @@ private struct SettingsView: View {
                 Toggle("Hide the notch", isOn: $settings.hideNotch)
                 Toggle("Round corners", isOn: $settings.roundCorners)
                 LabeledContent("Corner radius") {
-                    Slider(value: $settings.cornerRadius, in: 4 ... 24, step: 1)
+                    Slider(value: $settings.cornerRadius, in: 4 ... 32, step: 1)
                 }
                 .disabled(!settings.roundCorners)
             }
@@ -78,7 +81,7 @@ private struct SettingsView: View {
         .frame(width: 440)
         .fixedSize()
         .onChange(of: settings) { _, next in
-            Desktop.shared.update { $0 = next }
+            onChange(next)
         }
     }
 }

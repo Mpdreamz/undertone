@@ -48,8 +48,8 @@ public struct Settings: Hashable, Codable, Sendable {
     public var hideNotch = false
     /// Black outside a rounded rectangle (below the strip, if there is one), so windows' corners meet black.
     public var roundCorners = false
-    /// In points.
-    public var cornerRadius: Float = 10
+    /// In points: 16 is a macOS 26 window's own corner, so a window tiled into a corner shows no picture behind it.
+    public var cornerRadius: Float = 16
     public var showText = false
     public var title = "{computer}"
     public var subtitle = "{user} · macOS {os}"

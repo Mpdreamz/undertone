@@ -1,5 +1,12 @@
 import AppKit
 
+// UNDERTONE_SHOTS=<folder>: draw the docs' app images there and quit, without touching the desktop or the settings.
+if let folder = ProcessInfo.processInfo.environment["UNDERTONE_SHOTS"] {
+    _ = NSApplication.shared
+    MainActor.assumeIsolated { Shots.run(into: URL(fileURLWithPath: folder)) }
+    exit(0)
+}
+
 // One Undertone at a time; a second one leaves before it touches the desktop picture.
 guard SingleInstance.acquire() else {
     FileHandle.standardError.write(Data("Undertone is already running.\n".utf8))

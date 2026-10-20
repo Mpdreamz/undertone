@@ -1,7 +1,7 @@
 # Agents working on Undertone
 
 Undertone is a menu bar app that draws the desktop picture (gradients and shapes in a tonality that follows light or
-dark mode) and puts it back when something else replaces it. Read `PLAN.md` first.
+dark mode), hides the notch and the screen's corners in black, and keeps its picture set. Read `PLAN.md` first.
 
 ## Principles
 
@@ -21,6 +21,13 @@ dark mode) and puts it back when something else replaces it. Read `PLAN.md` firs
 - `mise run dev` builds and launches `build/Undertone.app`.
 - Branch names set the release-drafter label: `feature/`, `fix/`, `docs/`, `chore/`, `ci/`. Pull requests are
   squash-merged (the build number is main's commit count).
+
+## Docs
+
+`docs/` is a docs-builder site with `docs/undertone-landing.html` over its home page, published to GitHub Pages
+(`https://mpdreamz.github.io/undertone/`, so links carry the `/undertone/` prefix) by `.github/workflows/docs.yml` on
+every merge. Every image in `docs/images` is drawn by Undertone from a fixed recipe: change a style, a tonality or an
+overlay and run `mise run shots`, never a screenshot of a real desktop. Docs claim only what is built.
 
 ## Releasing
 
