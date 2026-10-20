@@ -9,6 +9,7 @@ that follow your light or dark theme and change on a schedule.
 - Seven effects over any picture: dither, halftone, reeded glass, bloom, a light leak, paper and posterize.
 - Lock screen motion: your picture drifts while the Mac is locked and settles onto the desktop as you unlock.
 - A new picture every hour, 3 hours or day, on login and wake, or from a hotkey; a picture per space; grain; a title.
+- Settings in `~/.config/undertone/config.toml`, for your dotfiles; edits apply on their own.
 - Updates itself.
 
 **[mpdreamz.github.io/undertone](https://mpdreamz.github.io/undertone/)** has the docs and every style and tonality.

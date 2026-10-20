@@ -28,6 +28,6 @@ Everything is set from the menu or **Settings…**, and applies straight away.
 | Pause | Off | Menu | Leave the desktop alone. |
 | Open at login | Off | Menu | A login item. |
 
-The settings are stored as JSON in Undertone's defaults (`io.github.mpdreamz.undertone`, key `settings`), with the
-picture showing now (`pick`) and the time of the last shuffle (`lastShuffle`). `defaults delete
-io.github.mpdreamz.undertone` while Undertone is not running starts over from the defaults.
+Every setting except **Open at Login** and **Pause** is also a key in the [config file](configuration.md),
+`~/.config/undertone/config.toml`, which you can edit or keep in your dotfiles. What is showing now, the time of the
+last shuffle and **Pause** live in Undertone's own preferences (`io.github.mpdreamz.undertone`).

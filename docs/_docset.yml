@@ -34,6 +34,7 @@ toc:
     children:
       - file: index.md
       - file: settings.md
+      - file: configuration.md
       - file: cli.md
       - file: files.md
       - file: updates.md

@@ -101,6 +101,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             LockScreenMotion.toggle()
         })
         menu.addItem(.action("Settings…", key: ",") { SettingsWindow.show() })
+        menu.addItem(.action("Open Config File") { AppDelegate.openConfigFile() })
+        if let first = Preferences.warnings.first {
+            let more = Preferences.warnings.count > 1 ? " (and \(Preferences.warnings.count - 1) more)" : ""
+            let item = NSMenuItem.label("config.toml \(first)\(more)")
+            item.toolTip = Preferences.warnings.map(\.description).joined(separator: "\n")
+            menu.addItem(item)
+        }
         menu.addItem(.separator())
         menu.addItem(.action("Pause (Leave the Desktop Alone)", on: settings.paused) {
             Desktop.shared.update { $0.paused.toggle() }
@@ -115,6 +122,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             action: #selector(NSApplication.terminate),
             keyEquivalent: "q"
         ))
+    }
+}
+
+extension AppDelegate {
+    /// Opens the config file in the editor for .toml files (or TextEdit), writing it first when there is none.
+    static func openConfigFile() {
+        if !FileManager.default.fileExists(atPath: Preferences.resolvedConfigURL.path) {
+            Preferences.settings = Desktop.shared.settings
+        }
+        let url = Preferences.resolvedConfigURL
+        if NSWorkspace.shared.urlForApplication(toOpen: url) != nil {
+            NSWorkspace.shared.open(url)
+        } else {
+            NSWorkspace.shared.open(
+                [url], withApplicationAt: URL(fileURLWithPath: "/System/Applications/TextEdit.app"),
+                configuration: NSWorkspace.OpenConfiguration()
+            )
+        }
     }
 }
 

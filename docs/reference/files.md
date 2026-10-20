@@ -10,6 +10,7 @@ description: Where Undertone keeps its pictures and settings.
 | `~/Library/Application Support/Undertone/Motion` | With lock screen motion on: each display's loop and settle movies, and `motion.json` naming them for the screen saver. |
 | `~/Library/Screen Savers/Undertone.saver` | The screen saver, copied from the app when lock screen motion is turned on, and updated with the app. |
 | `~/Library/Application Support/Undertone/undertone.lock` | Keeps a second copy of Undertone from running. |
-| `~/Library/Preferences/io.github.mpdreamz.undertone.plist` | The [settings](settings.md). |
+| `~/.config/undertone/config.toml` | The [settings](configuration.md), for your dotfiles (under `$XDG_CONFIG_HOME` when that is set). |
+| `~/Library/Preferences/io.github.mpdreamz.undertone.plist` | What is showing now, the last shuffle, and pause. |
 
 `brew uninstall --zap undertone` removes all of them. A 4K picture with grain is about 10 MB.

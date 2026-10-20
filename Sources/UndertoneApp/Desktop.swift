@@ -59,6 +59,7 @@ final class Desktop {
             Task { @MainActor in self.apply() }
         }
         MotionStudio.shared.start()
+        timers.append(Preferences.watch { self.reload($0) })
         watchWallpaperStore()
         // The backstop: whatever reset the picture without any of the above noticing is caught within half a minute.
         timers.append(Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { _ in
@@ -72,6 +73,18 @@ final class Desktop {
     }
 
     // MARK: Choosing
+
+    /// Settings read from the config file: applied like a change from the menu, but not written back.
+    func reload(_ next: Settings) {
+        guard next != settings else { return }
+        let motionWasOn = settings.lockScreenMotion
+        settings = next
+        pick = pick.applying(next)
+        Preferences.pick = pick
+        if next.lockScreenMotion, !motionWasOn { MotionStudio.installSaver() }
+        if !next.lockScreenMotion, motionWasOn { MotionStudio.shared.stop() }
+        apply()
+    }
 
     func update(_ change: (inout Settings) -> Void) {
         var next = settings

@@ -10,6 +10,7 @@ usage: undertone render [--style S] [--tonality T] [--appearance dark|light] [--
        undertone shuffle
        undertone movie [render options] [--seconds S] [--fps N] [--settle S] [--movement M]
                        [--easing glide|easeOut|spring] [--codec hevc|h264] -o <file.mp4>
+       undertone config [--defaults | --check [file]]
        undertone styles
        undertone tonalities
        undertone effects
@@ -21,6 +22,10 @@ usage: undertone render [--style S] [--tonality T] [--appearance dark|light] [--
       The same picture in motion: one seamless loop (--seconds, default 12, at --fps, default 30), then a settle
       (--settle, default 2.5 seconds; 0 for none) that slows it to a stop on the still picture, as --easing says
       (default easeOut). --movement scales how far things move (default 1; 0.5 is subtle, 1.6 strong).
+  config
+      Where the config file is (~/.config/undertone/config.toml, or under $XDG_CONFIG_HOME). --defaults prints a
+      file with every setting at its default, to start from; --check reads the file (or the one given) and lists
+      what it cannot use, failing when there is anything.
   render
       Draw one picture to a PNG (a JPEG when the file ends in .jpg), without the app. --size is in pixels
       (default 3024x1964, a 14" MacBook Pro), --scale the pixels to a point (default 2). Defaults: mesh, ember, dark, seed 1, grain 0.035.
@@ -120,6 +125,27 @@ case "shuffle":
     DistributedNotificationCenter.default().postNotificationName(
         .init("io.github.mpdreamz.undertone.shuffle"), object: nil, userInfo: nil, deliverImmediately: true
     )
+case "config":
+    switch arguments.dropFirst().first {
+    case nil:
+        print(ConfigFile.url().path)
+    case "--defaults":
+        print(ConfigFile.render(Settings()), terminator: "")
+    case "--check":
+        let url = arguments.count > 2 ? URL(fileURLWithPath: arguments[2]) : ConfigFile.url()
+        guard let text = try? String(contentsOf: url, encoding: .utf8) else { fail("cannot read \(url.path)") }
+        let warnings = ConfigFile.parse(text).warnings
+        if warnings.isEmpty {
+            print("\(url.path): fine")
+        } else {
+            for warning in warnings {
+                print("\(url.path):\(warning.line): \(warning.message)")
+            }
+            exit(1)
+        }
+    default:
+        fail("config takes --defaults or --check [file]", code: 2)
+    }
 case "styles":
     for style in Style.allCases {
         print("\(style.rawValue.padding(toLength: 10, withPad: " ", startingAt: 0))\(style.summary)")
