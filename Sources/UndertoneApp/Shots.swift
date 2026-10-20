@@ -117,7 +117,7 @@ enum Shots {
         let picture = Renderer.render(recipe, width: width, height: height, scale: Float(scale))
         let overlay = Overlay(
             strip: notch ? Int(menuBar * scale) : 0,
-            cornerRadius: corners ? Int(CGFloat(UndertoneCore.Settings().cornerRadius) * scale) : 0,
+            cornerRadius: corners ? Int(CGFloat(Overlay.windowCorner) * scale) : 0,
             title: title?.0 ?? "", subtitle: title?.1 ?? "", scale: Float(scale)
         )
         guard let desktop = Composer.compose(picture, overlay, appearance: recipe.appearance) else {
@@ -229,16 +229,15 @@ enum Shots {
     /// A Finder-like window tiled flush against the left edge, just under the menu bar.
     private static func drawWindow(in screen: NSRect) {
         let frame = NSRect(x: screen.minX, y: screen.minY + menuBar, width: 900, height: screen.height - menuBar)
-        let shape = NSBezierPath(roundedRect: frame, xRadius: 16, yRadius: 16)
+        // A toolbar window's corner, as macOS 26 draws it: 26 points in the continuous curve.
+        let shape = NSBezierPath(cgPath: ContinuousCorners.path(frame, radius: 26))
         NSColor(white: 0.16, alpha: 1).setFill()
         shape.fill()
+        NSGraphicsContext.current?.cgContext.saveGState()
+        shape.addClip()
         NSColor(white: 0.21, alpha: 1).setFill()
-        NSBezierPath(rect: NSRect(x: frame.minX, y: frame.minY + 16, width: frame.width, height: 36)).fill()
-        NSBezierPath(
-            roundedRect: NSRect(x: frame.minX, y: frame.minY, width: frame.width, height: 40),
-            xRadius: 16,
-            yRadius: 16
-        ).fill()
+        NSBezierPath(rect: NSRect(x: frame.minX, y: frame.minY, width: frame.width, height: 52)).fill()
+        NSGraphicsContext.current?.cgContext.restoreGState()
         for (i, color) in [NSColor.systemRed, .systemYellow, .systemGreen].enumerated() {
             color.setFill()
             NSBezierPath(ovalIn: NSRect(

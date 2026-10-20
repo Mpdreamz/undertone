@@ -8,8 +8,14 @@ import UniformTypeIdentifiers
 public struct Overlay: Hashable, Codable, Sendable {
     /// A black strip across the top, the menu bar's height on a display with a notch; 0 for none.
     public var strip: Int = 0
-    /// Black outside a rectangle with these rounded corners (below the strip); 0 for square.
+    /// Black outside a rectangle with these rounded corners (below the strip), in macOS's continuous curve; 0 for
+    /// square.
     public var cornerRadius: Int = 0
+
+    /// The corner, in points, that hides every macOS 26 window's own: measured from windows' transparent corners,
+    /// toolbar windows (Finder's, Safari's) need 26.25 in the continuous curve, plain ones 16. A point over, for the
+    /// anti-aliased edge; a less rounded window simply covers the extra black.
+    public static let windowCorner: Float = 27
     /// Centred text, and a smaller line under it; empty for none.
     public var title = ""
     public var subtitle = ""
@@ -45,13 +51,21 @@ public enum Composer {
         // CoreGraphics counts from the bottom: the strip is at the top of the rectangle.
         if overlay.strip > 0 || overlay.cornerRadius > 0 {
             let visible = CGRect(x: 0, y: 0, width: width, height: height - max(overlay.strip, 0))
-            let radius = CGFloat(min(overlay.cornerRadius, Int(min(visible.width, visible.height) / 2)))
+            let radius = CGFloat(overlay.cornerRadius)
             let path = CGMutablePath()
             path.addRect(bounds)
-            path.addRoundedRect(in: visible, cornerWidth: radius, cornerHeight: radius)
+            path.addPath(ContinuousCorners.path(visible, radius: radius))
             context.addPath(path)
             context.setFillColor(CGColor(gray: 0, alpha: 1))
             context.fillPath(using: .evenOdd)
+            // Along the screen's edges the curve runs almost flat, and a window's own anti-aliased corner reaches a
+            // little further than ours there: a thin black line on our edge covers that sliver.
+            if radius > 0 {
+                context.addPath(ContinuousCorners.path(visible, radius: radius))
+                context.setStrokeColor(CGColor(gray: 0, alpha: 1))
+                context.setLineWidth(3)
+                context.strokePath()
+            }
         }
 
         let dark = appearance == .dark

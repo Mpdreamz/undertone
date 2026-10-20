@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 import UndertoneCore
 
-/// Everything the menu has, plus what a menu cannot hold: the title's text, the corner radius and the grain's
+/// Everything the menu has, plus what a menu cannot hold: the title's text, motion timing and the grain's
 /// strength. Every change applies straight away.
 @MainActor
 enum SettingsWindow {
@@ -67,10 +67,6 @@ struct SettingsView: View {
             Section("Screen") {
                 Toggle("Hide the notch", isOn: $settings.hideNotch)
                 Toggle("Round corners", isOn: $settings.roundCorners)
-                LabeledContent("Corner radius") {
-                    Slider(value: $settings.cornerRadius, in: 4 ... 32, step: 1)
-                }
-                .disabled(!settings.roundCorners)
             }
             Section {
                 Picker("Speed", selection: $settings.motionSpeed) {
