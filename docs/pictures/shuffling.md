@@ -13,6 +13,9 @@ A shuffle picks a new picture. Style and tonality are two separate choices, each
 | Random | Locked | the style and the seed: new shapes in the same colours |
 | Locked | Locked | only the seed: the same style and colours, laid out anew |
 
+The [effect](effects.md) is a third choice of the same kind: none, locked, or random, in which case every shuffle
+picks a different one.
+
 A random choice never lands on what is showing, so a shuffle always looks like one. Changing a lock keeps the seed:
 locking the tonality to *moss* recolours the picture you have rather than drawing another.
 

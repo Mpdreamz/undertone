@@ -21,6 +21,7 @@ toc:
       - file: index.md
       - file: styles.md
       - file: tonalities.md
+      - file: effects.md
       - file: shuffling.md
   - folder: desktop
     children:

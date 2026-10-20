@@ -64,6 +64,27 @@ struct RendererTests {
         #expect(Self.luma(dark) < Self.luma(light))
     }
 
+    @Test(arguments: Effect.allCases.filter { $0 != .none })
+    func everyEffectChangesThePictureButKeepsItsLook(effect: Effect) {
+        for appearance in Appearance.allCases {
+            let plain = Self.draw(Recipe(style: .aurora, tonality: .aurora, appearance: appearance, seed: 19))
+            var recipe = Recipe(style: .aurora, tonality: .aurora, appearance: appearance, seed: 19, effect: effect)
+            let treated = Self.draw(recipe)
+            #expect(treated.pixels != plain.pixels, "\(effect) did nothing in \(appearance)")
+            #expect(abs(Self.luma(treated) - Self.luma(plain)) < 0.15, "\(effect) changed the brightness too much")
+            #expect(treated.pixels == Self.draw(recipe).pixels, "\(effect) is not deterministic")
+            recipe.seed = 20
+            #expect(Self.draw(recipe).pixels != treated.pixels)
+        }
+    }
+
+    @Test func noEffectDrawsWhatAPlainRecipeDraws() {
+        let plain = Recipe(style: .silk, tonality: .dusk, appearance: .dark, seed: 5)
+        var none = plain
+        none.effect = .none
+        #expect(Self.draw(plain).pixels == Self.draw(none).pixels)
+    }
+
     @Test func grainOnlyAddsNoise() {
         let clean = Self.draw(Recipe(style: .mesh, tonality: .glacier, appearance: .dark, seed: 9, grain: 0))
         let grainy = Self.draw(Recipe(style: .mesh, tonality: .glacier, appearance: .dark, seed: 9, grain: 0.06))

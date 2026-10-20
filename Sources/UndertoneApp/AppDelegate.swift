@@ -26,7 +26,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let pick = desktop.pick
 
         menu.addItem(.label(build.label))
-        menu.addItem(.label("\(pick.style.rawValue.capitalized) in \(pick.tonality.rawValue.capitalized)"))
+        menu.addItem(.label(
+            "\(pick.style.rawValue.capitalized) in \(pick.tonality.rawValue.capitalized)"
+                + (pick.effect == .none ? "" : ", \(pick.effect.title)")
+        ))
         menu.addItem(.separator())
         menu.addItem(.action("Shuffle", key: "s") { Desktop.shared.shuffle() })
         menu.addItem(.separator())
@@ -48,6 +51,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             .action(tonality.rawValue.capitalized, on: settings.tonality == .locked(tonality)) {
                 Desktop.shared.update { $0.tonality = .locked(tonality) }
             }
+        }))
+        menu.addItem(.submenu("Effect", [
+            .action("Random", on: settings.effect == .random) { Desktop.shared.update { $0.effect = .random } },
+            .separator(),
+        ] + Effect.allCases.map { effect in
+            let item = NSMenuItem.action(effect.title, on: settings.effect == .locked(effect)) {
+                Desktop.shared.update { $0.effect = .locked(effect) }
+            }
+            item.toolTip = effect.summary
+            return item
         }))
         menu.addItem(.submenu("Spaces", [
             .action("A Picture per Space", on: settings.spaces == .different) {

@@ -4,12 +4,13 @@ import UndertoneCore
 // undertone: Undertone from a shell or a hotkey daemon. It starts in milliseconds and needs no permission.
 
 let usage = """
-usage: undertone render [--style S] [--tonality T] [--appearance dark|light] [--seed N] [--grain G]
+usage: undertone render [--style S] [--tonality T] [--appearance dark|light] [--seed N] [--grain G] [--effect E]
                         [--size WxH] [--scale K] [--strip PT] [--corners PT] [--title T] [--subtitle T]
                         -o <file.png|file.jpg>
        undertone shuffle
        undertone styles
        undertone tonalities
+       undertone effects
        undertone --version
 
   shuffle
@@ -46,6 +47,7 @@ func render(_ arguments: ArraySlice<String>) {
             recipe.tonality = parse(Tonality(rawValue: value), "no tonality \(value) (see undertone tonalities)")
         case "--appearance": recipe.appearance = parse(Appearance(rawValue: value), "appearance is dark or light")
         case "--seed": recipe.seed = parse(UInt64(value), "seed is a whole number")
+        case "--effect": recipe.effect = parse(Effect(rawValue: value), "no effect \(value) (see undertone effects)")
         case "--grain": recipe.grain = parse(Float(value), "grain is a number, e.g. 0.035")
         case "--scale": scale = parse(Float(value), "scale is a number, e.g. 2")
         case "--size":
@@ -84,6 +86,10 @@ case "shuffle":
 case "styles":
     for style in Style.allCases {
         print("\(style.rawValue.padding(toLength: 10, withPad: " ", startingAt: 0))\(style.summary)")
+    }
+case "effects":
+    for effect in Effect.allCases {
+        print("\(effect.rawValue.padding(toLength: 10, withPad: " ", startingAt: 0))\(effect.summary)")
     }
 case "tonalities":
     print(Tonality.allCases.map(\.rawValue).joined(separator: "\n"))

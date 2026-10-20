@@ -47,6 +47,23 @@ for style in $("$app/Contents/Helpers/undertone" styles | awk '{print $1}'); do
 done
 echo "$json}" >"$shots/styles/shuffles/shuffles.json"
 
+# Every effect on the same four pictures, dark and light, for the landing page's effect tiles and the docs.
+mkdir -p "$shots/effects"
+for effect in $("$app/Contents/Helpers/undertone" effects | awk '$1 != "none" {print $1}'); do
+  # Dithering leaves 64 colours, which a PNG holds in less than a JPEG does.
+  extension=jpg
+  [ "$effect" = dither ] && extension=png
+  n=1
+  for recipe in aurora:aurora:19 waves:tide:100 rings:citrus:4 orbs:aurora:14; do
+    IFS=: read -r style tonality seed <<<"$recipe"
+    for appearance in dark light; do
+      $render --style "$style" --tonality "$tonality" --appearance "$appearance" --seed "$seed" --effect "$effect" \
+        --size 800x520 --scale 1.25 --grain 0.02 -o "$shots/effects/$effect-$appearance-$n.$extension"
+    done
+    n=$((n + 1))
+  done
+done
+
 # Every tonality in one style, so only the colours change.
 for tonality in $("$app/Contents/Helpers/undertone" tonalities); do
   for appearance in dark light; do

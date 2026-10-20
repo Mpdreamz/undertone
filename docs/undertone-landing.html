@@ -175,6 +175,7 @@
       <a class="l" href="#notch">Notch</a>
       <a class="l" href="#styles">Styles</a>
       <a class="l" href="#tonalities">Theme</a>
+      <a class="l" href="#effects">Effects</a>
       <a class="l" href="#schedule">Schedule</a>
       <a class="l" href="#faq">FAQ</a>
       <a class="l" href="getting-started/">Docs</a>
@@ -279,6 +280,29 @@
   </div>
 </section>
 
+<section id="effects">
+  <div class="wrap center">
+    <div class="eyebrow">Seven effects</div>
+    <h2>Print, glass and film.</h2>
+    <p class="sub">Dither, halftone, reeded glass, bloom, a light leak, paper and posterize, over any style in any
+      tonality. Lock one, leave them off, or let every shuffle pick a new one.</p>
+    <div class="toggle" role="group" aria-label="Appearance">
+      <button class="on" data-appearance="dark">Dark</button><button data-appearance="light">Light</button>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="grid styles">
+      <figure class="tile" data-effect="dither" data-ext="png"><div class="cycle"><img src="images/shots/effects/dither-dark-1.png" alt="Dither over aurora" loading="lazy"></div><figcaption><b>Dither</b> <i>on Aurora</i><span>Ordered dithering, like an old screen</span></figcaption></figure>
+      <figure class="tile" data-effect="halftone" data-ext="jpg"><div class="cycle"><img src="images/shots/effects/halftone-dark-1.jpg" alt="Halftone over aurora" loading="lazy"></div><figcaption><b>Halftone</b> <i>on Aurora</i><span>Dots sized by colour, like print</span></figcaption></figure>
+      <figure class="tile" data-effect="glass" data-ext="jpg"><div class="cycle"><img src="images/shots/effects/glass-dark-1.jpg" alt="Glass over aurora" loading="lazy"></div><figcaption><b>Glass</b> <i>on Aurora</i><span>Reeded glass in front of the picture</span></figcaption></figure>
+      <figure class="tile" data-effect="bloom" data-ext="jpg"><div class="cycle"><img src="images/shots/effects/bloom-dark-1.jpg" alt="Bloom over aurora" loading="lazy"></div><figcaption><b>Bloom</b> <i>on Aurora</i><span>Bright parts glow</span></figcaption></figure>
+      <figure class="tile" data-effect="leak" data-ext="jpg"><div class="cycle"><img src="images/shots/effects/leak-dark-1.jpg" alt="Light Leak over aurora" loading="lazy"></div><figcaption><b>Light Leak</b> <i>on Aurora</i><span>A warm film leak from one edge</span></figcaption></figure>
+      <figure class="tile" data-effect="paper" data-ext="jpg"><div class="cycle"><img src="images/shots/effects/paper-dark-1.jpg" alt="Paper over aurora" loading="lazy"></div><figcaption><b>Paper</b> <i>on Aurora</i><span>Fibres under the colour</span></figcaption></figure>
+      <figure class="tile" data-effect="posterize" data-ext="jpg"><div class="cycle"><img src="images/shots/effects/posterize-dark-1.jpg" alt="Posterize over aurora" loading="lazy"></div><figcaption><b>Posterize</b> <i>on Aurora</i><span>Hard bands of lightness</span></figcaption></figure>
+    </div>
+  </div>
+</section>
+
 <section id="schedule">
   <div class="wrap feat">
     <div class="copyblock">
@@ -343,7 +367,7 @@
     <div class="copyblock">
       <div class="eyebrow">One menu</div>
       <h2>Everything a click away.</h2>
-      <p class="sub">Shuffle, lock a style or a tonality, a picture per space, automatic shuffles every hour, three hours
+      <p class="sub">Shuffle, lock a style, a tonality or an effect, a picture per space, automatic shuffles every hour, three hours
         or day, grain, the notch, corners and a title: all in the menu bar item, with a settings window for the
         text and the sliders.</p>
       <ul>
@@ -408,7 +432,7 @@
       const appearance = button.dataset.appearance;
       toggle.querySelectorAll('button').forEach(b => b.classList.toggle('on', b === button));
       section.querySelectorAll('.tile img').forEach(img => {
-        img.src = img.src.replace(/-(dark|light)(-\d)?\.jpg$/, `-${appearance}$2.jpg`);
+        img.src = img.src.replace(/-(dark|light)(-\d)?\.(jpg|png)$/, `-${appearance}$2.$3`);
       });
     }));
   });
@@ -445,6 +469,41 @@
       if (still) return;
       setTimeout(() => setInterval(() => { if (visible) show((frame + 1) % tones.length); }, 2600), index * 240);
     });
+  });
+
+  // Each effect tile cycles through the same four pictures with the effect over them.
+  const pictures = ['Aurora', 'Waves', 'Rings', 'Orbs'];
+  document.querySelectorAll('#effects .tile[data-effect]').forEach((tile, index) => {
+    const effect = tile.dataset.effect, ext = tile.dataset.ext;
+    const cycle = tile.querySelector('.cycle'), label = tile.querySelector('figcaption i');
+    const appearance = () => document.querySelector('#effects .toggle .on').dataset.appearance;
+    let frame = 0, visible = false;
+    new IntersectionObserver(entries => { visible = entries[0].isIntersecting; }).observe(tile);
+    if (still) return;
+    setTimeout(() => setInterval(() => {
+      if (!visible) return;
+      const next = (frame + 1) % pictures.length;
+      const reveal = () => {
+        cycle.querySelectorAll('img + img').forEach(other => other.classList.toggle('shown', other === img));
+        label.textContent = `on ${pictures[next]}`;
+        frame = next;
+      };
+      if (next === 0) {
+        cycle.querySelectorAll('img + img').forEach(other => other.classList.remove('shown'));
+        label.textContent = `on ${pictures[0]}`;
+        frame = 0;
+        return;
+      }
+      let img = cycle.querySelector(`img[data-frame="${next}"]`);
+      if (!img) {
+        img = document.createElement('img');
+        img.dataset.frame = next;
+        img.alt = `${effect} over ${pictures[next].toLowerCase()}`;
+        img.src = `images/shots/effects/${effect}-${appearance()}-${next + 1}.${ext}`;
+        cycle.appendChild(img);
+      }
+      if (img.complete) reveal(); else img.onload = reveal;
+    }, 2800), 1200 + index * 300);
   });
 
   document.querySelectorAll('.copy').forEach(button => button.addEventListener('click', async () => {

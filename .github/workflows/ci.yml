@@ -65,6 +65,14 @@ jobs:
           # Every image the landing page names exists.
           grep -o 'src="images/[^"]*"' docs/undertone-landing.html | sed 's/src="//; s/"$//' | sort -u \
             | while read -r image; do test -f "docs/$image" || { echo "missing docs/$image" >&2; exit 1; }; done
+          # The pictures each effect tile cycles through.
+          grep -o 'data-effect="[a-z]*" data-ext="[a-z]*"' docs/undertone-landing.html \
+            | sed -E 's/data-effect="([a-z]*)" data-ext="([a-z]*)"/\1 \2/' | while read -r effect ext; do
+            for n in 1 2 3 4; do for appearance in dark light; do
+              test -f "docs/images/shots/effects/$effect-$appearance-$n.$ext" \
+                || { echo "missing effect $effect-$appearance-$n.$ext" >&2; exit 1; }
+            done; done
+          done
           # And the shuffles each style tile cycles through.
           test -f docs/images/shots/styles/shuffles/shuffles.json
           grep -o 'data-style="[a-z]*"' docs/undertone-landing.html | sed 's/data-style="//; s/"$//' | while read -r style; do
