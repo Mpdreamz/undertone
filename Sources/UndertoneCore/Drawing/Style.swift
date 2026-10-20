@@ -25,14 +25,14 @@ public enum Style: String, CaseIterable, Codable, Sendable {
     func shader(_ p: Palette, _ rng: inout RNG, _ frame: Frame) -> Shader {
         switch self {
         case .mesh: Self.mesh(p, &rng, frame)
-        case .flow: Self.flow(p, &rng)
-        case .waves: Self.waves(p, &rng)
+        case .flow: Self.flow(p, &rng, frame)
+        case .waves: Self.waves(p, &rng, frame)
         case .orbs: Self.orbs(p, &rng, frame)
         case .rings: Self.rings(p, &rng, frame)
-        case .dunes: Self.dunes(p, &rng)
+        case .dunes: Self.dunes(p, &rng, frame)
         case .contour: Self.contour(p, &rng, frame)
         case .silk: Self.silk(p, &rng, frame)
-        case .aurora: Self.aurora(p, &rng)
+        case .aurora: Self.aurora(p, &rng, frame)
         case .bauhaus: Self.bauhaus(p, &rng, frame)
         case .blobs: Self.blobs(p, &rng, frame)
         }
@@ -52,6 +52,28 @@ struct Frame: Sendable {
     let aspect: Float
     let pixel: Float
     let scale: Float
+    var motion = Motion.still
+
+    /// How far a moving part has moved from where the still picture has it: `cycles` round trips per loop, starting
+    /// at `phase`. Zero for the still picture, and back to zero at the end of every loop, so a loop is seamless and
+    /// letting `amount` fall to zero settles the picture onto the still.
+    @inline(__always) func drift(_ cycles: Float, _ phase: Float) -> Float {
+        guard motion.amount != 0 else { return 0 }
+        return motion.amount * (sin(2 * .pi * cycles * motion.time + phase) - sin(phase))
+    }
+}
+
+/// Where in its loop a moving picture is (`time`, 0 ..< 1) and how much it moves (`amount`, 0 for the still picture).
+public struct Motion: Hashable, Sendable {
+    public var time: Float
+    public var amount: Float
+
+    public init(time: Float, amount: Float = 1) {
+        self.time = time
+        self.amount = amount
+    }
+
+    public static let still = Motion(time: 0, amount: 0)
 }
 
 typealias Shader = @Sendable (Pixel) -> RGB
@@ -62,11 +84,16 @@ extension Style {
     /// Soft radial glows over the base, the technique of curb's site.
     static func mesh(_ p: Palette, _ rng: inout RNG, _ frame: Frame) -> Shader {
         let roles = [2, 3, 2, 3, 4, 1]
-        let glows = roles.map { role in
+        let glows = roles.enumerated().map { i, role in
             let cx = rng.uniform(-0.1, frame.aspect + 0.1), cy = rng.uniform(-0.1, 1.1)
             let r = 0.3 + rng.unit() * 0.45
             let a = (p.isDark ? 0.7 : 0.75) * rng.uniform(0.45, 1)
-            return (cx: cx, cy: cy, r: r, a: a, color: p[role])
+            // Each glow wanders on a loop of its own.
+            let k = Float(i)
+            return (
+                cx: cx + 0.12 * frame.drift(1, k * 2.4), cy: cy + 0.08 * frame.drift(1, k * 1.7 + 1),
+                r: r * (1 + 0.08 * frame.drift(2, k)), a: a, color: p[role]
+            )
         }
         let base = p.base
         return { px in
@@ -81,13 +108,15 @@ extension Style {
     }
 
     /// Domain-warped noise through the palette: marbling.
-    static func flow(_ p: Palette, _ rng: inout RNG) -> Shader {
+    static func flow(_ p: Palette, _ rng: inout RNG, _ frame: Frame) -> Shader {
         let qx = FBM(freq: 1, octaves: 3, rng: &rng), qy = FBM(freq: 1, octaves: 3, rng: &rng)
         let f = FBM(freq: 1, octaves: 3, rng: &rng)
         let ramp = p.ramp(p.isDark ? [0, 1, 3, 2, 4] : [0, 4, 3, 2, 1])
         let dark = p.isDark, base = p.base
+        // The fold itself moves: the warp is read from a slowly circling spot.
+        let (dx, dy) = (0.12 * frame.drift(1, 0.3), 0.1 * frame.drift(1, 2.1))
         return { px in
-            let wx = qx(px.u, px.v), wy = qy(px.u + 5.2, px.v + 1.3)
+            let wx = qx(px.u + dx, px.v + dy), wy = qy(px.u + 5.2 - dy, px.v + 1.3 + dx)
             let t = smooth(0.25, 0.8, f(px.u + 1.1 * wx, px.v + 1.1 * wy))
             let c = ramp(t)
             return dark ? mix(c, base, 0.45 * smooth(0.2, 0.9, px.v)) : c
@@ -95,12 +124,13 @@ extension Style {
     }
 
     /// Layered ribbons, back to front, each with a lit rim and a shadow on the one behind.
-    static func waves(_ p: Palette, _ rng: inout RNG) -> Shader {
+    static func waves(_ p: Palette, _ rng: inout RNG, _ frame: Frame) -> Shader {
         let n = 6
         let colors = p.ramp(p.isDark ? [1, 3, 2, 4] : [4, 3, 2, 1])
         let layers = (0 ..< n).map { i in
-            let ph = rng.unit() * tau, fr = rng.uniform(1.2, 2.6)
-            return (base: 0.25 + Float(i) * 0.12, ph: ph, fr: fr, color: colors(Float(i) / Float(n - 1)))
+            let ph = rng.unit() * tau + 1.2 * frame.drift(1, Float(i) * 1.3), fr = rng.uniform(1.2, 2.6)
+            let base = 0.25 + Float(i) * 0.12 + 0.012 * frame.drift(1, Float(i) * 0.9 + 2)
+            return (base: base, ph: ph, fr: fr, color: colors(Float(i) / Float(n - 1)))
         }
         let sky = p.ramp(p.isDark ? [0, 1] : [0, 4])
         let dark = p.isDark, base = p.base
@@ -131,7 +161,11 @@ extension Style {
         let dim: Float = p.isDark ? 0.6 : 1
         let orbs = (0 ..< 5).map { _ in
             let cx = rng.uniform(0.1, frame.aspect - 0.1), cy = rng.uniform(0.1, 0.9), r = rng.uniform(0.12, 0.34)
-            return (cx: cx, cy: cy, r: r, color: p[rng.int(2, 5)])
+            let k = cx * 7
+            return (
+                cx: cx + 0.06 * frame.drift(1, k), cy: cy + 0.05 * frame.drift(1, k + 1.6), r: r,
+                color: p[rng.int(2, 5)]
+            )
         }
         let shadowSide: Float = p.isDark ? 0.35 : 0.75
         return { px in
@@ -152,12 +186,15 @@ extension Style {
 
     /// Concentric bands round a centre below one of the bottom corners, each shaded like a cylinder.
     static func rings(_ p: Palette, _ rng: inout RNG, _ frame: Frame) -> Shader {
-        let cx: Float = rng.unit() < 0.5 ? -0.2 : frame.aspect + 0.2, cy = rng.uniform(0.9, 1.4)
+        let cx: Float = (rng.unit() < 0.5 ? -0.2 : frame.aspect + 0.2) + 0.04 * frame.drift(1, 0.5)
+        let cy = rng.uniform(0.9, 1.4) + 0.03 * frame.drift(1, 2)
+        // The bands breathe outwards and back.
+        let breathe = 0.6 * frame.drift(1, 1.2)
         let ramp = p.ramp(p.isDark ? [1, 3, 2, 4, 1] : [4, 3, 2, 1, 4])
         let dark = p.isDark, base = p.base
         return { px in
             let d = hypot(px.ux - cx, px.v - cy)
-            let k = d / 0.11
+            let k = d / 0.11 + breathe
             let index = k.rounded(.down)
             let shade = 0.55 + 0.45 * sin((k - index) * .pi)
             let c = ramp(index.truncatingRemainder(dividingBy: 9) / 8) * (dark ? shade : 0.8 + 0.2 * shade)
@@ -166,17 +203,21 @@ extension Style {
     }
 
     /// Hills stacked towards the viewer, each lit along its ridge and casting a shadow up the one behind.
-    static func dunes(_ p: Palette, _ rng: inout RNG) -> Shader {
+    static func dunes(_ p: Palette, _ rng: inout RNG, _ frame: Frame) -> Shader {
         let n = 7
         let colors = p.ramp(p.isDark ? [4, 3, 2, 1, 0] : [3, 2, 1, 4, 0])
         let hills = (0 ..< n).map { i in
-            (ridge: FBM(freq: 2, octaves: 3, rng: &rng), i: Float(i), color: colors(Float(i) / Float(n - 1)))
+            (
+                ridge: FBM(freq: 2, octaves: 3, rng: &rng), i: Float(i), color: colors(Float(i) / Float(n - 1)),
+                // Nearer hills slide further, as if seen from a moving train.
+                shift: 0.14 * Float(i + 1) * frame.drift(1, 0.4)
+            )
         }
         let sky = p.ramp(p.isDark ? [1, 0] : [4, 0])
         return { px in
             var c = sky(px.v)
             for h in hills {
-                let y0 = 0.3 + h.i * 0.1 + 0.16 * (h.ridge(px.ux * 0.4 + h.i * 3.1, h.i * 0.7) - 0.5)
+                let y0 = 0.3 + h.i * 0.1 + 0.16 * (h.ridge(px.ux * 0.4 + h.i * 3.1 + h.shift, h.i * 0.7) - 0.5)
                 let dy = px.v - y0
                 if dy < 0 {
                     c = mix(c, .black, exp(dy / 0.04) * 0.25)
@@ -196,10 +237,12 @@ extension Style {
         let dim: Float = p.isDark ? 0.55 : 1
         let line = p.isDark ? p[2] : p[1] * 0.6
         let step = frame.pixel * frame.scale // one point, in u and v
+        // The lines flow: the height field rises and falls through them.
+        let rise = 1.6 * frame.drift(1, 0.7)
         return { px in
-            let levels = f(px.u * 1.2, px.v * 1.2) * 26
-            let gx = f((px.u + step / frame.aspect) * 1.2, px.v * 1.2) * 26 - levels
-            let gy = f(px.u * 1.2, (px.v + step) * 1.2) * 26 - levels
+            let levels = f(px.u * 1.2, px.v * 1.2) * 26 + rise
+            let gx = f((px.u + step / frame.aspect) * 1.2, px.v * 1.2) * 26 + rise - levels
+            let gy = f(px.u * 1.2, (px.v + step) * 1.2) * 26 + rise - levels
             let nearest = levels.rounded()
             let width = max(hypot(gx, gy), 1e-4)
             let on = smooth(1.1, 0.2, abs(levels - nearest) / width)
@@ -211,7 +254,9 @@ extension Style {
     /// Three wide ribbons that twist as they cross the screen, a sheen running across each.
     static func silk(_ p: Palette, _ rng: inout RNG, _ frame: Frame) -> Shader {
         let backdrop = mesh(p, &rng, frame)
-        let ribbons = (0 ..< 3).map { j in (j: Float(j), ph: rng.unit() * tau, fr: rng.uniform(1.0, 2.0)) }
+        let ribbons = (0 ..< 3).map { j in
+            (j: Float(j), ph: rng.unit() * tau + 0.9 * frame.drift(1, Float(j) * 2), fr: rng.uniform(1.0, 2.0))
+        }
         let ramp = p.ramp(p.isDark ? [2, 3, 4] : [3, 2, 1])
         let dark = p.isDark
         return { px in
@@ -234,13 +279,15 @@ extension Style {
     }
 
     /// Curtains of light hanging from wandering lines, streaked by noise.
-    static func aurora(_ p: Palette, _ rng: inout RNG) -> Shader {
+    static func aurora(_ p: Palette, _ rng: inout RNG, _ frame: Frame) -> Shader {
         let curtains = (0 ..< 3).map { j in
-            (
-                j: Float(j),
-                line: FBM(freq: 2, octaves: 3, rng: &rng),
-                streak: FBM(freq: 7, octaves: 4, rng: &rng),
-                ramp: p.ramp(j % 2 == 0 ? [2, 3] : [3, 4])
+            let line = FBM(freq: 2, octaves: 3, rng: &rng), streak = FBM(freq: 7, octaves: 4, rng: &rng)
+            // The curtain's line sways; its streaks shimmer twice as fast.
+            let sway: Float = 0.12 * frame.drift(1, Float(j) * 1.9)
+            let shimmer: Float = 0.06 * frame.drift(2, Float(j))
+            return (
+                j: Float(j), line: line, streak: streak, ramp: p.ramp(j % 2 == 0 ? [2, 3] : [3, 4]),
+                sway: sway, shimmer: shimmer
             )
         }
         let sky = p.isDark ? Ramp([p[0], p[1] * 0.6 + p[0] * 0.4]) : p.ramp([4, 0])
@@ -248,8 +295,8 @@ extension Style {
         return { px in
             var c = sky(px.v)
             for k in curtains {
-                let cy = 0.35 + k.j * 0.12 + 0.24 * (k.line(px.ux * 0.5 + k.j, k.j) - 0.5)
-                let streak = k.streak(px.ux * 0.37 + k.j * 0.31 + 0.02 * px.v, k.j * 0.2)
+                let cy = 0.35 + k.j * 0.12 + 0.24 * (k.line(px.ux * 0.5 + k.j + k.sway, k.j) - 0.5)
+                let streak = k.streak(px.ux * 0.37 + k.j * 0.31 + 0.02 * px.v + k.shimmer, k.j * 0.2)
                 let above = max(cy - px.v, 0), below = max(px.v - cy, 0)
                 let curtain = exp(-above / 0.25) * exp(-below / 0.03) * (0.4 + 1.2 * streak * streak)
                 let color = k.ramp(above / 0.35)
@@ -268,6 +315,8 @@ extension Style {
             let ground = rng.unit() < 0.5 ? p[rng.int(0, 5)] : p[0]
             return (color: color, ground: ground, kind: rng.int(0, 3), corner: rng.int(0, 4))
         }
+        // Each shape swells and shrinks a little, out of step with its neighbours.
+        let pulse = (0 ..< cols * rows).map { 1 - 0.05 * frame.drift(1, Float($0) * 0.83) }
         let dark = p.isDark, base = p.base
         return { px in
             let gx = min(max(Int(px.ux / cw), 0), cols - 1), gy = min(max(Int(px.v / ch), 0), rows - 1)
@@ -280,7 +329,7 @@ extension Style {
             case 1: hypot(px.ux - (x0 + cw / 2), px.v - oy) / (cw / 2)
             default: hypot(px.ux - (x0 + cw / 2), px.v - (y0 + ch / 2)) / (min(cw, ch) * 0.42)
             }
-            let shape = smooth(1.003, 0.997, d)
+            let shape = smooth(1.003, 0.997, d * pulse[gy * cols + gx])
             let lit = dark
                 ? cell.color * (0.75 + 0.25 * (1 - d))
                 : mix(cell.color, .white, 0.25 * (1 - min(max(d, 0), 1)))
@@ -293,7 +342,8 @@ extension Style {
     static func blobs(_ p: Palette, _ rng: inout RNG, _ frame: Frame) -> Shader {
         let balls = (0 ..< 9).map { _ in
             let cx = rng.uniform(0, frame.aspect), cy = rng.uniform(0, 1), r = rng.uniform(0.08, 0.2)
-            return (cx: cx, cy: cy, r2: r * r)
+            let k = cy * 9
+            return (cx: cx + 0.1 * frame.drift(1, k), cy: cy + 0.08 * frame.drift(1, k + 2.2), r2: r * r)
         }
         let ground = p.ramp(p.isDark ? [0, 1] : [0, 4])
         let ramp = p.ramp(p.isDark ? [2, 3, 4] : [3, 2, 1])

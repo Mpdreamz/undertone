@@ -17,6 +17,10 @@ new picture when you first switch to it after a shuffle. See [Spaces](desktop/sp
 
 **There is no black strip with Hide the Notch on.** The strip is drawn only on displays with a notch.
 
+**The lock screen does not move.** Lock screen motion plays only in the screen saver: check that Undertone is chosen in
+System Settings › Screen Saver, and give it a few minutes after turning it on (or after a shuffle) to draw the movie.
+Locking straight away shows the still lock screen.
+
 **What is Undertone doing?** It logs to the unified log:
 
 ```sh

@@ -41,6 +41,29 @@ public struct Picture: Sendable {
         )
     }
 
+    /// The pixels of an image, as RGBA rows.
+    public init?(_ image: CGImage) {
+        var pixels = [UInt8](repeating: 0, count: image.width * image.height * 4)
+        let drawn = pixels.withUnsafeMutableBytes { bytes in
+            CGContext(
+                data: bytes.baseAddress, width: image.width, height: image.height, bitsPerComponent: 8,
+                bytesPerRow: image.width * 4, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue
+            ).map { context in
+                context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+                return true
+            } ?? false
+        }
+        guard drawn else { return nil }
+        self.init(width: image.width, height: image.height, pixels: pixels)
+    }
+
+    public init(width: Int, height: Int, pixels: [UInt8]) {
+        self.width = width
+        self.height = height
+        self.pixels = pixels
+    }
+
     public func png() -> Data? {
         cgImage().flatMap(Composer.png)
     }
@@ -49,16 +72,24 @@ public struct Picture: Sendable {
 public enum Renderer {
     /// Draw `recipe` at `width` × `height` pixels, `scale` pixels to the point (2 on a Retina display): the shapes
     /// follow the picture's size, grain and lines follow points, so a picture looks the same on any display.
-    public static func render(_ recipe: Recipe, width: Int, height: Int, scale: Float = 1) -> Picture {
+    ///
+    /// `motion` moves it: every style has parts that drift on a loop, and the still picture is `.still`. `threads`
+    /// caps how many cores it uses (nil: all of them), for work in the background.
+    public static func render(
+        _ recipe: Recipe, width: Int, height: Int, scale: Float = 1, motion: Motion = .still, threads: Int? = nil
+    ) -> Picture {
         precondition(width > 0 && height > 0, "a picture needs pixels")
-        let frame = Frame(aspect: Float(width) / Float(height), pixel: 1 / Float(height), scale: scale)
+        let frame = Frame(
+            aspect: Float(width) / Float(height), pixel: 1 / Float(height), scale: scale, motion: motion
+        )
         let palette = recipe.tonality.palette(recipe.appearance)
         var rng = RNG(seed: recipe.seed)
         let shader = recipe.effect.wrap(recipe.style.shader(palette, &rng, frame), palette: palette, frame: frame)
         let finish = Finish(recipe: recipe, frame: frame, isDark: palette.isDark)
         let effect = Effect.Finish(recipe.effect, seed: recipe.seed, frame: frame, isDark: palette.isDark)
-        // Bands of rows, more than there are cores, so a slow band does not hold the rest up.
-        let bands = min(height, ProcessInfo.processInfo.activeProcessorCount * 8)
+        // Bands of rows, more than there are cores, so a slow band does not hold the rest up; or, capped, one band per
+        // thread.
+        let bands = min(height, threads.map { max($0, 1) } ?? ProcessInfo.processInfo.activeProcessorCount * 8)
 
         // The picture in floating point, so bloom can read it whole before anything is rounded.
         var colors = [RGB](repeating: .black, count: width * height)

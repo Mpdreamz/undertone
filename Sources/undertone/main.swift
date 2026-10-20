@@ -8,6 +8,7 @@ usage: undertone render [--style S] [--tonality T] [--appearance dark|light] [--
                         [--size WxH] [--scale K] [--strip PT] [--corners PT] [--title T] [--subtitle T]
                         -o <file.png|file.jpg>
        undertone shuffle
+       undertone movie [render options] [--seconds S] [--fps N] [--settle S] [--codec hevc|h264] -o <file.mp4>
        undertone styles
        undertone tonalities
        undertone effects
@@ -15,6 +16,9 @@ usage: undertone render [--style S] [--tonality T] [--appearance dark|light] [--
 
   shuffle
       A new picture now, in Undertone.app (which must be running), as the menu's Shuffle.
+  movie
+      The same picture in motion: one seamless loop (--seconds, default 12, at --fps, default 30), then a settle
+      (--settle, default 2.5 seconds; 0 for none) that slows it to a stop on the still picture.
   render
       Draw one picture to a PNG (a JPEG when the file ends in .jpg), without the app. --size is in pixels
       (default 3024x1964, a 14" MacBook Pro), --scale the pixels to a point (default 2). Defaults: mesh, ember, dark, seed 1, grain 0.035.
@@ -31,13 +35,15 @@ func parse<T>(_ value: T?, _ message: String) -> T {
     return value
 }
 
-func render(_ arguments: ArraySlice<String>) {
+func render(_ arguments: ArraySlice<String>, movie: Bool = false) {
     var recipe = Recipe(style: .mesh, tonality: .ember, appearance: .dark, seed: 1)
     var width = 3024, height = 1964
     var scale: Float = 2
     var output: String?
     var strip: Float = 0, corners: Float = 0
     var title = "", subtitle = ""
+    var seconds = 12.0, fps = 30, settle = 2.5
+    var codec = Movie.Codec.hevc
     var rest = arguments
     while let flag = rest.popFirst() {
         guard let value = rest.popFirst() else { fail("\(flag) needs a value") }
@@ -58,11 +64,31 @@ func render(_ arguments: ArraySlice<String>) {
         case "--corners": corners = parse(Float(value), "corners is in points, e.g. 10")
         case "--title": title = value
         case "--subtitle": subtitle = value
+        case "--seconds" where movie: seconds = parse(Double(value), "seconds is a number, e.g. 12")
+        case "--fps" where movie: fps = parse(Int(value), "fps is a whole number, e.g. 30")
+        case "--settle" where movie: settle = parse(Double(value), "settle is in seconds, e.g. 2.5")
+        case "--codec" where movie: codec = parse(Movie.Codec(rawValue: value), "codec is hevc or h264")
         case "-o", "--output": output = value
         default: fail("unknown option \(flag)\n\(usage)", code: 2)
         }
     }
-    guard let output else { fail("render needs -o <file.png>", code: 2) }
+    guard let output else { fail("\(movie ? "movie" : "render") needs -o <file>", code: 2) }
+    if movie {
+        var motions = Movie.loop(seconds: seconds, fps: fps)
+        if settle > 0 { motions += Movie.settle(from: 0, loopSeconds: seconds, seconds: settle, fps: fps) }
+        do {
+            try Movie.write(
+                recipe, width: width, height: height, scale: scale, motions: motions, fps: fps, codec: codec,
+                to: URL(fileURLWithPath: output)
+            ) { written in
+                if written % fps == 0 || written == motions.count {
+                    FileHandle.standardError.write(Data("\rundertone: \(written)/\(motions.count) frames".utf8))
+                }
+            }
+            FileHandle.standardError.write(Data("\n".utf8))
+        } catch { fail("could not write \(output): \(error)") }
+        return
+    }
     let picture = Renderer.render(recipe, width: width, height: height, scale: scale)
     let overlay = Overlay(
         strip: Int((strip * scale).rounded()), cornerRadius: Int((corners * scale).rounded()),
@@ -79,6 +105,8 @@ let arguments = Array(CommandLine.arguments.dropFirst())
 switch arguments.first {
 case "render":
     render(arguments.dropFirst())
+case "movie":
+    render(arguments.dropFirst(), movie: true)
 case "shuffle":
     DistributedNotificationCenter.default().postNotificationName(
         .init("io.github.mpdreamz.undertone.shuffle"), object: nil, userInfo: nil, deliverImmediately: true

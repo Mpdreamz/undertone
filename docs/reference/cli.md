@@ -40,6 +40,22 @@ undertone render --style silk --tonality dusk --appearance light --seed 9 -o sil
 
 Every image in these docs was drawn this way, or by the app from the same renderer.
 
+## undertone movie
+
+The same picture in motion, written as a movie: one seamless loop, then a settle that slows it to a stop on the still
+picture. It takes every `render` option, and:
+
+| Option | Default | |
+|---|---|---|
+| `--seconds` | `12` | The loop's length. |
+| `--fps` | `30` | Frames per second. |
+| `--settle` | `2.5` | The settle's length in seconds; `0` for none. |
+| `--codec` | `hevc` | `hevc` or `h264`. |
+
+```sh
+undertone movie --style aurora --tonality aurora --size 1920x1080 --scale 1 -o aurora.mp4
+```
+
 ## undertone styles, undertone tonalities, undertone effects
 
 List the names `render` takes, styles with a line on each.

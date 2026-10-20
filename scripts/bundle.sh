@@ -29,7 +29,20 @@ if ! otool -l "$app/Contents/MacOS/Undertone" | grep -q "@executable_path/../Fra
 fi
 sed -e "s/__VERSION__/$version/g" -e "s/__BUILD__/$build/g" -e "s/__COMMIT__/$commit/g" \
   "$root/Resources/Info.plist" >"$app/Contents/Info.plist"
+# The screen saver (Contents/Resources/Undertone.saver), which the app copies to ~/Library/Screen Savers: the
+# library SwiftPM built, its Info.plist, and a thumbnail drawn by the renderer for System Settings.
+saver="$app/Contents/Resources/Undertone.saver"
+rm -rf "$saver"
+mkdir -p "$saver/Contents/MacOS" "$saver/Contents/Resources"
+cp "$products/libUndertoneSaver.dylib" "$saver/Contents/MacOS/Undertone"
+sed -e "s/__VERSION__/$version/g" -e "s/__BUILD__/$build/g" "$root/Resources/Saver/Info.plist" \
+  >"$saver/Contents/Info.plist"
+"$products/undertone" render --style aurora --tonality aurora --seed 19 --size 180x116 --scale 1 \
+  -o "$saver/Contents/Resources/thumbnail.png"
+"$products/undertone" render --style aurora --tonality aurora --seed 19 --size 360x232 --scale 2 \
+  -o "$saver/Contents/Resources/thumbnail@2x.png"
 codesign --force --sign - "$app/Contents/Helpers/undertone"
+codesign --force --sign - "$saver"
 codesign --force --deep --sign - "$app/Contents/Frameworks/Sparkle.framework"
 codesign --force --sign - "$app"
 # The helper must be the command line tool, never the app: hotkey daemons run it on every key press.

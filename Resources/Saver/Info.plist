@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleName</key><string>Undertone</string>
+  <key>CFBundleDisplayName</key><string>Undertone</string>
+  <key>CFBundleIdentifier</key><string>io.github.mpdreamz.undertone.saver</string>
+  <key>CFBundleExecutable</key><string>Undertone</string>
+  <key>CFBundlePackageType</key><string>BNDL</string>
+  <key>CFBundleVersion</key><string>__BUILD__</string>
+  <key>CFBundleShortVersionString</key><string>__VERSION__</string>
+  <!-- The ScreenSaverView subclass, by its Objective-C name. -->
+  <key>NSPrincipalClass</key><string>UndertoneSaverView</string>
+  <key>LSMinimumSystemVersion</key><string>15.0</string>
+</dict>
+</plist>

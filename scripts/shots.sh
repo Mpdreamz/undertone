@@ -84,6 +84,11 @@ for grain in 0 0.06; do
     --size 900x560 --scale 2 -o "$shots/grain/grain-$grain.jpg"
 done
 
+# The landing page's lock screen video: one seamless loop, H.264 so every browser plays it.
+mkdir -p "$shots/landing"
+"$app/Contents/Helpers/undertone" movie --style aurora --tonality aurora --appearance dark --seed 19 \
+  --size 960x624 --scale 1 --seconds 8 --fps 30 --settle 0 --codec h264 -o docs/images/shots/landing/motion.mp4
+
 # The picture social sites show for a link.
 $render --style aurora --tonality aurora --appearance dark --seed 19 --grain 0.04 --size 1280x640 --scale 1 \
   --title Undertone --subtitle "Hide the notch. Keep the colour." -o docs/images/social.jpg

@@ -19,6 +19,7 @@ Click the half-filled circle in the menu bar.
 | **Hide the Notch** | A black menu bar strip the notch disappears into. See [Notch and corners](../desktop/notch-and-corners.md). |
 | **Round Corners** | Black outside rounded corners, so a window tiled into a corner meets black. |
 | **Show Title** | A centred [title and subtitle](../desktop/grain-and-title.md). |
+| **Lock Screen Motion** | Your picture in motion while locked, settling onto the desktop as you unlock. See [Lock screen motion](../desktop/lock-screen.md). |
 | **Settings…** | Everything above, plus the title's text, the corner radius and the grain's strength. |
 | **Pause** | Leave the desktop alone: Undertone sets nothing until you turn it off. |
 | **Open at Login** | Start with your Mac. It is a normal login item, listed in System Settings › General › Login Items. |

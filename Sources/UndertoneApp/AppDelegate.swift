@@ -16,6 +16,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         item.menu = menu
         statusItem = item
         desktop.start()
+        // A new version of the app brings a new screen saver.
+        if desktop.settings.lockScreenMotion { MotionStudio.installSaver() }
         Updater.shared.start()
     }
 
@@ -94,6 +96,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         })
         menu.addItem(.action("Show Title", on: settings.showText) {
             Desktop.shared.update { $0.showText.toggle() }
+        })
+        menu.addItem(.action("Lock Screen Motion", on: settings.lockScreenMotion) {
+            LockScreenMotion.toggle()
         })
         menu.addItem(.action("Settings…", key: ",") { SettingsWindow.show() })
         menu.addItem(.separator())
