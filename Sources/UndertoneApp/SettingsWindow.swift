@@ -45,6 +45,13 @@ struct SettingsView: View {
                         Text(tonality.rawValue.capitalized).tag(Choice<Tonality>.locked(tonality))
                     }
                 }
+                Picker("Effect", selection: $settings.effect) {
+                    Text("Random").tag(Choice<Effect>.random)
+                    Divider()
+                    ForEach(Effect.allCases, id: \.self) { effect in
+                        Text(effect.title).tag(Choice<Effect>.locked(effect))
+                    }
+                }
                 Picker("Spaces", selection: $settings.spaces) {
                     Text("A picture per space").tag(SpacesMode.different)
                     Text("The same picture everywhere").tag(SpacesMode.same)

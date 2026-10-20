@@ -10,13 +10,18 @@ public struct Recipe: Hashable, Codable, Sendable {
     public var seed: UInt64
     /// Strength of the film grain, 0 for none; 0.035 is subtle, 0.06 is plainly there.
     public var grain: Float
+    public var effect: Effect
 
-    public init(style: Style, tonality: Tonality, appearance: Appearance, seed: UInt64, grain: Float = 0.035) {
+    public init(
+        style: Style, tonality: Tonality, appearance: Appearance, seed: UInt64, grain: Float = 0.035,
+        effect: Effect = .none
+    ) {
         self.style = style
         self.tonality = tonality
         self.appearance = appearance
         self.seed = seed
         self.grain = grain
+        self.effect = effect
     }
 }
 
@@ -49,25 +54,52 @@ public enum Renderer {
         let frame = Frame(aspect: Float(width) / Float(height), pixel: 1 / Float(height), scale: scale)
         let palette = recipe.tonality.palette(recipe.appearance)
         var rng = RNG(seed: recipe.seed)
-        let shader = recipe.style.shader(palette, &rng, frame)
+        let shader = recipe.effect.wrap(recipe.style.shader(palette, &rng, frame), palette: palette, frame: frame)
         let finish = Finish(recipe: recipe, frame: frame, isDark: palette.isDark)
+        let effect = Effect.Finish(recipe.effect, seed: recipe.seed, frame: frame, isDark: palette.isDark)
+        // Bands of rows, more than there are cores, so a slow band does not hold the rest up.
+        let bands = min(height, ProcessInfo.processInfo.activeProcessorCount * 8)
 
-        var pixels = [UInt8](repeating: 255, count: width * height * 4)
-        pixels.withUnsafeMutableBufferPointer { buffer in
-            let out = Output(base: buffer.baseAddress!)
-            // Bands of rows, more than there are cores, so a slow band does not hold the rest up.
-            let bands = min(height, ProcessInfo.processInfo.activeProcessorCount * 8)
+        // The picture in floating point, so bloom can read it whole before anything is rounded.
+        var colors = [RGB](repeating: .black, count: width * height)
+        colors.withUnsafeMutableBufferPointer { buffer in
+            let out = Shared(base: buffer.baseAddress!)
             DispatchQueue.concurrentPerform(iterations: bands) { band in
-                let rows = height * band / bands ..< height * (band + 1) / bands
-                for y in rows {
+                for y in height * band / bands ..< height * (band + 1) / bands {
                     let v = (Float(y) + 0.5) / Float(height)
                     for x in 0 ..< width {
                         let u = (Float(x) + 0.5) / Float(width)
-                        let c = finish(shader(Pixel(u: u, v: v, ux: u * frame.aspect)), x: x, y: y, u: u, v: v)
-                        let i = (y * width + x) * 4
-                        out.base[i] = UInt8(c.x * 255 + 0.5)
-                        out.base[i + 1] = UInt8(c.y * 255 + 0.5)
-                        out.base[i + 2] = UInt8(c.z * 255 + 0.5)
+                        out.base[y * width + x] = finish.vignette(
+                            shader(Pixel(u: u, v: v, ux: u * frame.aspect)),
+                            u: u,
+                            v: v
+                        )
+                    }
+                }
+            }
+            if recipe.effect == .bloom {
+                Effect.bloom(buffer.baseAddress!, width: width, height: height, isDark: palette.isDark)
+            }
+        }
+
+        var pixels = [UInt8](repeating: 255, count: width * height * 4)
+        pixels.withUnsafeMutableBufferPointer { buffer in
+            let out = Shared(base: buffer.baseAddress!)
+            colors.withUnsafeBufferPointer { colors in
+                let source = SharedConstant(base: colors.baseAddress!)
+                DispatchQueue.concurrentPerform(iterations: bands) { band in
+                    for y in height * band / bands ..< height * (band + 1) / bands {
+                        let v = (Float(y) + 0.5) / Float(height)
+                        for x in 0 ..< width {
+                            let ux = (Float(x) + 0.5) / Float(width) * frame.aspect
+                            var c = effect(source.base[y * width + x], x: x, y: y, ux: ux, v: v)
+                            if effect.allowsGrain { c = finish.grain(c, x: x, y: y) }
+                            c = c.clamped
+                            let i = (y * width + x) * 4
+                            out.base[i] = UInt8(c.x * 255 + 0.5)
+                            out.base[i + 1] = UInt8(c.y * 255 + 0.5)
+                            out.base[i + 2] = UInt8(c.z * 255 + 0.5)
+                        }
                     }
                 }
             }
@@ -76,12 +108,16 @@ public enum Renderer {
     }
 }
 
-/// The buffer, shared by the bands: each writes only its own rows.
-private struct Output: @unchecked Sendable {
-    let base: UnsafeMutablePointer<UInt8>
+/// A buffer shared by the bands: each writes only its own rows.
+private struct Shared<T>: @unchecked Sendable {
+    let base: UnsafeMutablePointer<T>
 }
 
-/// What every style gets on top: a vignette, then grain, then clamped to 0…1.
+private struct SharedConstant<T>: @unchecked Sendable {
+    let base: UnsafePointer<T>
+}
+
+/// What every style gets on top: a vignette, and (after any effect) grain.
 private struct Finish {
     let grain: Float
     let seed: UInt32
@@ -96,13 +132,14 @@ private struct Finish {
         cell = max(frame.scale, 1)
     }
 
-    @inline(__always) func callAsFunction(_ color: RGB, x: Int, y: Int, u: Float, v: Float) -> RGB {
+    @inline(__always) func vignette(_ color: RGB, u: Float, v: Float) -> RGB {
         let d = hypot((u - 0.5) * 1.2, v - 0.5)
-        var c = mix(color, .black, smooth(0.4, 1.0, d) * vignette)
-        if grain > 0 {
-            c += RGB(repeating: noise(Float(x) / cell, Float(y) / cell) * grain)
-        }
-        return c.clamped
+        return mix(color, .black, smooth(0.4, 1.0, d) * vignette)
+    }
+
+    @inline(__always) func grain(_ color: RGB, x: Int, y: Int) -> RGB {
+        guard grain > 0 else { return color }
+        return color + RGB(repeating: noise(Float(x) / cell, Float(y) / cell) * grain)
     }
 
     /// Monochrome grain about one point across: hashed per point and blended between neighbours, centred on 0 with a

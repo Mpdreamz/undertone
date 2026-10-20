@@ -60,6 +60,36 @@ struct ChoosingTests {
         #expect(a2 == pick.recipe(space: "A", settings: settings, appearance: .dark))
     }
 
+    @Test func aRandomEffectIsNeverNoneAndNeverRepeats() {
+        var settings = Settings()
+        settings.effect = .random
+        var rng = Fixed()
+        var pick = Pick.next(after: nil, settings: settings, rng: &rng)
+        for _ in 0 ..< 40 {
+            let next = Pick.next(after: pick, settings: settings, rng: &rng)
+            #expect(next.effect != .none)
+            #expect(next.effect != pick.effect)
+            pick = next
+        }
+    }
+
+    @Test func effectsAreOffUntilChosen() {
+        var rng = Fixed()
+        #expect(Pick.next(after: nil, settings: Settings(), rng: &rng).effect == .none)
+        var settings = Settings()
+        settings.effect = .locked(.halftone)
+        let pick = Pick(style: .mesh, tonality: .ember, seed: 1)
+        #expect(pick.applying(settings).effect == .halftone)
+        #expect(pick.applying(settings).recipe(space: "A", settings: settings, appearance: .dark).effect == .halftone)
+        settings.effect = .random
+        #expect(pick.applying(settings).effect != .none, "choosing random shows an effect straight away")
+    }
+
+    @Test func aPickSavedBeforeEffectsStillLoads() throws {
+        let old = Data(#"{"style":"waves","tonality":"tide","seed":42}"#.utf8)
+        #expect(try JSONDecoder().decode(Pick.self, from: old) == Pick(style: .waves, tonality: .tide, seed: 42))
+    }
+
     @Test func settingsMissingKeysTakeTheirDefaults() throws {
         let decoded = try JSONDecoder().decode(Settings.self, from: Data(#"{"hideNotch":true}"#.utf8))
         var expected = Settings()

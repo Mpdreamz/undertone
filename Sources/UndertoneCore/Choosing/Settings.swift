@@ -39,6 +39,8 @@ public enum ShuffleInterval: String, CaseIterable, Codable, Sendable {
 public struct Settings: Hashable, Codable, Sendable {
     public var style: Choice<Style> = .random
     public var tonality: Choice<Tonality> = .random
+    /// None until chosen; random picks one of the effects (never none) on every shuffle.
+    public var effect: Choice<Effect> = .locked(.none)
     public var spaces: SpacesMode = .different
     public var interval: ShuffleInterval = .never
     /// A new picture when the Mac wakes or Undertone starts.
@@ -63,6 +65,7 @@ public struct Settings: Hashable, Codable, Sendable {
         let d = Settings()
         style = (try? c.decode(Choice<Style>.self, forKey: .style)) ?? d.style
         tonality = (try? c.decode(Choice<Tonality>.self, forKey: .tonality)) ?? d.tonality
+        effect = (try? c.decode(Choice<Effect>.self, forKey: .effect)) ?? d.effect
         spaces = (try? c.decode(SpacesMode.self, forKey: .spaces)) ?? d.spaces
         interval = (try? c.decode(ShuffleInterval.self, forKey: .interval)) ?? d.interval
         shuffleOnWake = (try? c.decode(Bool.self, forKey: .shuffleOnWake)) ?? d.shuffleOnWake
