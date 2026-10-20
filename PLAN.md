@@ -24,6 +24,14 @@ tonality that follows the system's light or dark appearance.
 6. **Choosing and settings.** Style and tonality are each locked or random; a new pick at login, on wake, every few
    hours, or on "Shuffle" (menu, or `undertone shuffle`). A settings window with a preview, launch at login, updates.
 
+## State
+
+Milestones 1 and 2 are merged; 3 to 6 are in the desktop pull request: the menu (shuffle, style and tonality each
+random or locked, spaces, automatic shuffles, grain, notch, corners, title, pause), a settings window for the title's
+text, the corner radius and the grain, and `undertone shuffle`. Pictures live in
+`~/Library/Application Support/Undertone/Pictures`, named by a fingerprint of what they show, and go two days after
+they were last set.
+
 ## Styles and tonalities
 
 Styles: `mesh` (soft glows over a dark base), `flow` (domain-warped noise through the palette), `waves` (layered

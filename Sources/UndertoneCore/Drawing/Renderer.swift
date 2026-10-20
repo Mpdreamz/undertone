@@ -1,8 +1,6 @@
 import CoreGraphics
 import Foundation
-import ImageIO
 import simd
-import UniformTypeIdentifiers
 
 /// Everything that decides what a picture looks like. The same recipe at the same size draws the same pixels.
 public struct Recipe: Hashable, Codable, Sendable {
@@ -39,12 +37,7 @@ public struct Picture: Sendable {
     }
 
     public func png() -> Data? {
-        guard let image = cgImage() else { return nil }
-        let data = NSMutableData()
-        guard let destination = CGImageDestinationCreateWithData(data, UTType.png.identifier as CFString, 1, nil)
-        else { return nil }
-        CGImageDestinationAddImage(destination, image, nil)
-        return CGImageDestinationFinalize(destination) ? data as Data : nil
+        cgImage().flatMap(Composer.png)
     }
 }
 
