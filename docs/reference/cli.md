@@ -58,6 +58,11 @@ picture. It takes every `render` option, and:
 undertone movie --style aurora --tonality aurora --size 1920x1080 --scale 1 -o aurora.mp4
 ```
 
+## undertone config
+
+`undertone config` prints where the [config file](configuration.md) is; `--defaults` prints every setting at its
+default; `--check [file]` lists what Undertone cannot use in it, by line, and exits with 1 if there is anything.
+
 ## undertone styles, undertone tonalities, undertone effects
 
 List the names `render` takes, styles with a line on each.

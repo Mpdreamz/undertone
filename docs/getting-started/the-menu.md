@@ -21,6 +21,7 @@ Click the half-filled circle in the menu bar.
 | **Show Title** | A centred [title and subtitle](../desktop/grain-and-title.md). |
 | **Lock Screen Motion** | Your picture in motion while locked, settling onto the desktop as you unlock. See [Lock screen motion](../desktop/lock-screen.md). |
 | **Settings…** | Everything above, plus the title's text, lock screen motion timing and the grain's strength. |
+| **Open Config File** | Opens [`config.toml`](../reference/configuration.md), writing it first if there is none. |
 | **Pause** | Leave the desktop alone: Undertone sets nothing until you turn it off. |
 | **Open at Login** | Start with your Mac. It is a normal login item, listed in System Settings › General › Login Items. |
 | **Check for Updates…** | Look for a new version now. See [Updates](../reference/updates.md). |
