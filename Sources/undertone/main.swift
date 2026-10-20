@@ -8,7 +8,8 @@ usage: undertone render [--style S] [--tonality T] [--appearance dark|light] [--
                         [--size WxH] [--scale K] [--strip PT] [--corners PT] [--title T] [--subtitle T]
                         -o <file.png|file.jpg>
        undertone shuffle
-       undertone movie [render options] [--seconds S] [--fps N] [--settle S] [--codec hevc|h264] -o <file.mp4>
+       undertone movie [render options] [--seconds S] [--fps N] [--settle S] [--movement M]
+                       [--easing glide|easeOut|spring] [--codec hevc|h264] -o <file.mp4>
        undertone styles
        undertone tonalities
        undertone effects
@@ -18,7 +19,8 @@ usage: undertone render [--style S] [--tonality T] [--appearance dark|light] [--
       A new picture now, in Undertone.app (which must be running), as the menu's Shuffle.
   movie
       The same picture in motion: one seamless loop (--seconds, default 12, at --fps, default 30), then a settle
-      (--settle, default 2.5 seconds; 0 for none) that slows it to a stop on the still picture.
+      (--settle, default 2.5 seconds; 0 for none) that slows it to a stop on the still picture, as --easing says
+      (default easeOut). --movement scales how far things move (default 1; 0.5 is subtle, 1.6 strong).
   render
       Draw one picture to a PNG (a JPEG when the file ends in .jpg), without the app. --size is in pixels
       (default 3024x1964, a 14" MacBook Pro), --scale the pixels to a point (default 2). Defaults: mesh, ember, dark, seed 1, grain 0.035.
@@ -44,6 +46,7 @@ func render(_ arguments: ArraySlice<String>, movie: Bool = false) {
     var title = "", subtitle = ""
     var seconds = 12.0, fps = 30, settle = 2.5
     var codec = Movie.Codec.hevc
+    var movement: Float = 1, easing = Movie.Easing.easeOut
     var rest = arguments
     while let flag = rest.popFirst() {
         guard let value = rest.popFirst() else { fail("\(flag) needs a value") }
@@ -67,6 +70,8 @@ func render(_ arguments: ArraySlice<String>, movie: Bool = false) {
         case "--seconds" where movie: seconds = parse(Double(value), "seconds is a number, e.g. 12")
         case "--fps" where movie: fps = parse(Int(value), "fps is a whole number, e.g. 30")
         case "--settle" where movie: settle = parse(Double(value), "settle is in seconds, e.g. 2.5")
+        case "--movement" where movie: movement = parse(Float(value), "movement is a number, e.g. 1")
+        case "--easing" where movie: easing = parse(Movie.Easing(rawValue: value), "easing is glide, easeOut or spring")
         case "--codec" where movie: codec = parse(Movie.Codec(rawValue: value), "codec is hevc or h264")
         case "-o", "--output": output = value
         default: fail("unknown option \(flag)\n\(usage)", code: 2)
@@ -74,8 +79,12 @@ func render(_ arguments: ArraySlice<String>, movie: Bool = false) {
     }
     guard let output else { fail("\(movie ? "movie" : "render") needs -o <file>", code: 2) }
     if movie {
-        var motions = Movie.loop(seconds: seconds, fps: fps)
-        if settle > 0 { motions += Movie.settle(from: 0, loopSeconds: seconds, seconds: settle, fps: fps) }
+        var motions = Movie.loop(seconds: seconds, fps: fps, movement: movement)
+        if settle > 0 {
+            motions += Movie.settle(
+                from: 0, loopSeconds: seconds, seconds: settle, fps: fps, movement: movement, easing: easing
+            )
+        }
         do {
             try Movie.write(
                 recipe, width: width, height: height, scale: scale, motions: motions, fps: fps, codec: codec,

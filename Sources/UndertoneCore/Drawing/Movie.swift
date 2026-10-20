@@ -5,24 +5,62 @@ import Foundation
 /// A picture in motion, written as a movie: a seamless loop of the picture drifting, and a settle that slows the
 /// drift to a stop on the still picture, so the last frame is exactly what the desktop shows.
 public enum Movie {
-    /// The moments of a loop: `seconds` long at `fps`, one cycle of every drift.
-    public static func loop(seconds: Double, fps: Int) -> [Motion] {
+    /// The moments of a loop: `seconds` long at `fps`, one cycle of every drift, moving `movement` times as far as
+    /// the styles do by default.
+    public static func loop(seconds: Double, fps: Int, movement: Float = 1) -> [Motion] {
         let count = max(Int(seconds * Double(fps)), 1)
-        return (0 ..< count).map { Motion(time: Float($0) / Float(count), amount: 1) }
+        return (0 ..< count).map { Motion(time: Float($0) / Float(count), amount: movement) }
     }
 
     /// The moments of a settle, starting where a loop of `loopSeconds` is at `time`: the drift keeps going but slows,
-    /// and its reach shrinks to nothing, over `seconds`. Its last moment is the still picture.
-    public static func settle(from time: Float, loopSeconds: Double, seconds: Double, fps: Int) -> [Motion] {
+    /// and its reach shrinks to nothing, over `seconds`, the way `easing` says. Its last moment is the still picture.
+    public static func settle(
+        from time: Float, loopSeconds: Double, seconds: Double, fps: Int, movement: Float = 1,
+        easing: Easing = .easeOut
+    ) -> [Motion] {
         let count = max(Int(seconds * Double(fps)), 2)
         var t = time
         let step = Float(1 / (loopSeconds * Double(fps)))
         return (0 ..< count).map { i in
             let p = Float(i) / Float(count - 1)
-            // Speed and reach both ease out: fast at first, gently onto the still.
+            t += step * easing.speed(p)
+            return i == count - 1 ? .still : Motion(time: t, amount: movement * easing.reach(p))
+        }
+    }
+
+    /// How a settle comes to rest, as two curves over its progress `p` (0 to 1): the drift's speed, and how far from
+    /// the still picture it may still be. Both start at 1; the reach ends at 0.
+    public enum Easing: String, CaseIterable, Codable, Sendable {
+        /// Keeps moving, and fades out late and softly.
+        case glide
+        /// Slows at once, then creeps into place.
+        case easeOut
+        /// Comes to rest a little past the still picture and swings back.
+        case spring
+
+        public var title: String {
+            switch self {
+            case .glide: "Glide"
+            case .easeOut: "Ease Out"
+            case .spring: "Spring"
+            }
+        }
+
+        func speed(_ p: Float) -> Float {
+            switch self {
+            case .glide: 0.5 * (1 + cos(.pi * p))
+            case .easeOut, .spring: (1 - p) * (1 - p)
+            }
+        }
+
+        func reach(_ p: Float) -> Float {
             let left = 1 - p
-            t += step * left * left
-            return i == count - 1 ? .still : Motion(time: t, amount: left * left * left * (2 - left))
+            switch self {
+            case .glide: return 0.5 * (1 + cos(.pi * p))
+            case .easeOut: return left * left * left * (2 - left)
+            // A damped swing through the still picture: negative is past it. The last factor lands it on zero.
+            case .spring: return exp(-3.2 * p) * cos(2.6 * .pi * p) * sqrt(left)
+            }
         }
     }
 

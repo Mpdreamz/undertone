@@ -33,6 +33,7 @@ enum Shots {
         settings.hideNotch = true
         settings.roundCorners = true
         settings.showText = true
+        settings.lockScreenMotion = true
         for appearance in Appearance.allCases {
             let view = SettingsView(settings: settings, onChange: { _ in })
             let image = try hosted(view, appearance: appearance == .dark ? .darkAqua : .aqua)

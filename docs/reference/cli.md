@@ -50,6 +50,8 @@ picture. It takes every `render` option, and:
 | `--seconds` | `12` | The loop's length. |
 | `--fps` | `30` | Frames per second. |
 | `--settle` | `2.5` | The settle's length in seconds; `0` for none. |
+| `--movement` | `1` | How far things move; `0.5` is subtle, `1.6` strong. |
+| `--easing` | `easeOut` | `glide`, `easeOut` or `spring`. |
 | `--codec` | `hevc` | `hevc` or `h264`. |
 
 ```sh
